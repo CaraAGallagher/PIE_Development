@@ -1,0 +1,1477 @@
+---
+title: "Metabolic variation project"
+output:
+  html_document:
+    df_print: paged
+    toc: yes
+  pdf_document:
+    toc: yes
+  word_document:
+    toc: yes
+  toc: yes
+  html_notebook: 
+      toc: yes
+---
+
+```{r, setup, include=FALSE, message=FALSE}
+knitr::opts_knit$set(root.dir = "C:/Users/cara/Dropbox/PC/Documents/PostdocBioMoveRepos/MetabolicVariation/EBIVRProject/")
+```
+
+Cara A. Gallagher  
+Postdoctoral researcher  
+University of Potsdam  
+Notebook started: November 4th, 2021  
+
+#### Project focus:  
+Understand the role of individual variation in metabolic traits on population dynamics and impacts of environmental alterations.
+
+#### Collaborators:  
+Florian Jeltsch, Melanie Dammhahn, Jana Eccard  
+
+***  
+
+### Entry: template
+
+#### General information:
+__Date__:  
+__Author__: Cara A. Gallagher  
+__Trace tag__:       
+__Keyword__:        
+__Title__:   
+__Overview__:  
+__Files__:  
+  
+#### Specific details:  
+
+
+***  
+
+### Entry: November 5th, 2021
+
+#### General information:
+__Date__: 05/11/2021  
+__Author__: Cara A. Gallagher  
+__Trace tag__: Data evaluation         
+__Keyword__: Parameterization        
+__Title__: Estimating BMR parameters     
+__Overview__: Estimating BMR normalization constant and slope from published data     
+__Files__:  
+* ~/EBIVRProject/Data/Parameterization/BMR/SadowskaEtAl2015.xlsx  
+* ~/EBIVRProject/Scripts/Input scripts/EBIV_BMR_parameter_estimation.R  
+
+
+
+#### Specific details:  
+* Set up files for initial parameterization of BMR parameter values  
+* Data used for first run freely available from the Supplement of:  
+  * Sadowska, E.T., Stawski, C., Rudolf, A., Dheyongera, G., Chrząścik, K.M., Baliga-Klimczyk, K. and Koteja, P., 2015. Evolution of basal metabolic rate in bank voles from a multidirectional selection experiment. Proceedings of the Royal Society B: Biological Sciences, 282(1806), p.20150025.  
+* Using the basic MTE equation format of:  
+  * $M_B = B_0m^γ$
+* Used _gls_ function from "nlme" package  
+* Used data from control (C) and herbivorous (H) selection lines, since these had similar BMR values in the paper  
+* Tested a lm, glm, and three gls models, and assessed fit using AIC  
+  * Simple gls gave the best fit  
+* Will use mean values for now, then variation can be added later  
+* Output plot:  
+
+```{r, message=FALSE, echo = FALSE}
+sys.source("Scripts/Input scripts/EBIV_BMR_parameter_estimation.R", envir = knitr::knit_global())
+plotOut
+```
+
+
+***  
+
+### Entry: November 9th, 2021
+
+#### General information:
+__Date__: 09-11-2021  
+__Author__: Cara A. Gallagher  
+__Trace tag__: Conceptual model evaluation      
+__Keyword__: Conceptual design decisions        
+__Title__: Planning cost of transport modelling   
+__Overview__: Deciding on an approach for modelling movement costs 
+__Files__:  
+* ~/EBIVRProject/Scripts/Input scripts/EBIV_COT_approach_decision.R  
+
+  
+#### Specific details:  
+* Basing on Pontzer 2016 - https://doi.org/10.1098/rsbl.2015.0935  
+  * Model for energy costs of legged locomotion, including costs of Activation-Relaxation and Cross-brdige cycling (ARC model)  
+  * Can be used for flat ground running, incline/decline running, or climbing  
+  * Power can be modelled to vary curvilinearly with speed, but "speed-related increase in cross-bridge cost is unlikely to be evident in small animals, for which cross-bridge costs account for a very small portion of Ė and ECOT", so I have decided to use the linear approximation  
+* Compared a few other published estimates in the R script, more can be added later  
+* Decided to use Pontzer equation to estimate incremental COT (though lower than other equations) because it included a wide variety of species and gives a more updated estimate  
+* Postural costs will be added separately based on the relationship with body mass in Chappell et al. 2004, Dlugosz et al. 2009, and Rezende et al. 2006 (all on mice)  
+  * Making costs mass dependent is consistent with findings in Chappell et al 2013 doi.org/10.1242/jeb.079186   
+  * Also costs did not change with ambient temperature in Chappell. et al 2004  
+* So total costs of transport will be based on iCOT (function of speed) + PCOT (as 4.70 * BodyMass^0.63)  
+* With this setup seems to get a pretty similar output to those of the three mouse studies  
+* Example plot showing  costs by speed divied up into iCOT (dark blue), PCOT (teal), and BMR (coral) (left) and minCOT by mass (right):   
+
+```{r, message=FALSE, echo = FALSE, fig.height=4, fig.width=8}
+sys.source("Scripts/Input scripts/EBIV_COT_approach_decision.R", envir = knitr::knit_global())
+fullPlot
+```
+  
+
+
+*** 
+
+### Entry: November 12th, 2021
+
+#### General information:
+__Date__: 12-11-2021  
+__Author__: Cara A. Gallagher  
+__Trace tag__: Data evaluation         
+__Keyword__: Parameterization        
+__Title__: Estimating growth curve parameters     
+__Overview__: Estimating growth curve parameters from published data     
+__Files__:  
+* ~/EBIVRProject/Data/Parameterization/Growth/GrowthCurveData.xlsx   
+* ~/EBIVRProject/Scripts/Input scripts/EBIV_growth_models.R  
+ 
+  
+#### Specific details:  
+* Couldn't find published growth curves for the species so collected mean values from published sources (either from data tables or extracted from plots using apps.automeris.io/wpd/)  
+* Tested Von Bertelanffy, Gompertz, and Logistic curves   -  went with VB
+* I hate the ceiling effect that can happen, so have decided to go with an elevated version of the fitted curve to allow for animals to get bigger than the mean fit if encountering sufficient resources - based on extreme values  
+* Still need to do fetal growth  
+* Also think about how to include storage versus structural mass  
+
+** growth curves changed to lean body mass: see entry from 26-11-2021 
+
+```{r, results='hide',message=FALSE, echo = FALSE}
+sys.source("Scripts/Input scripts/EBIV_growth_models.R", envir = knitr::knit_global())
+outplot
+```
+
+
+***  
+
+
+### Entry: November 17th, 2021
+
+#### General information:
+__Date__: 17-11-2021  
+__Author__: Cara A. Gallagher  
+__Trace tag__: Data evaluation         
+__Keyword__: Parameterization        
+__Title__: Estimating fetal growth curve parameters     
+__Overview__: Estimating fetal growth curve parameters from published data     
+__Files__:  
+* ~/EBIVRProject/Scripts/Input scripts/EBIV_reproduction_parameter_estimation.R  
+ 
+  
+#### Specific details:  
+* Found data on fetal growth values for gestation days 10 - 15 in Ożdżeński & Mystkowska 1976 - Acta Theriologica  
+  * used only days 10 - 15 as values from larger fetuses can be "deceptive" per the authors  
+* Combined these with newborn weights at day 20 from Koivula et al. 2003 Ecology  to get final masses  
+* Data were fit with Gompertz equations following Ricklefs 2010 - Functional Ecology  
+* Created separate fits for max, mean, and minimum masses from the refs, can use these to offset fetal growth based on mother's energy balance (not sure how exactly yet)  
+* Fits aren't perfect (days 11 & 12) but they are fine enough  
+* To-do: 
+  * Would be good to find placental growth, can maybe use the values for mice from Mu et al. 2008 - Reproductive Biology and Endocrinology  
+  * Gather additional reproduction parameters: litter size, body composition, lactation efficiency, pregnancy rates, and body condition dependent measures  
+  
+    
+* Fetal growth curve parameters:   
+
+| Metric        | A       | k     | No      |  
+|:-------------:|:-------:|:-----:|:-------:|  
+| Max           | 19.957  | 0.112 | 6.9e-08 |  
+| Mean          | 18.117  | 0.095 | 3.1e-06 |  
+| Min           | 4.783   | 0.109 | 4.5e-06 |  
+
+
+* Fetal growth curves:   
+```{r, results='hide', message=FALSE, echo = FALSE, warning = FALSE}
+sys.source("Scripts/Input scripts/EBIV_reproduction_parameter_estimation.R", envir = knitr::knit_global())
+outplot
+```
+
+
+***  
+
+
+### Entry: November 18th, 2021
+
+#### General information:
+__Date__: 18-11-2021  
+__Author__: Cara A. Gallagher  
+__Trace tag__: Data evaluation         
+__Keyword__: Parameterization        
+__Title__: Estimating energy intake parameters     
+__Overview__: Estimating energy intake parameters from published data     
+__Files__:  
+* ~/EBIVRProject/Scripts/Input scripts/EBIV_energy_intake_parameters.R  
+* ~/BrainstormFiles/ModelParamsAndEquations.doc  
+
+  
+#### Specific details:  
+* Collecting values for maximum energy intake and assimilation from the literature  
+* In Piątkowska & Weiner 1987 both energy intake and assimilation were affected by temperature  
+  * The rates found here were also quite close to costs and per the discussion "the energy  budgets of small mammals may always approach the actual upper limit of their assimilation capacity."  
+  * Good support of using costs to determine consumption  
+* Using functional response curve from Lundberg 1988  
+  * Not perfect as this was from an experimental setting using one food source but could be useful to model drop off in ingestion rates at higher densities  
+* Started moving some parameter values over to ModelParamsAndEquations.doc file   
+
+* side note:
+  * Also added new data sources for calculating BMR from: Grosiak et al. 2020 - Front in Physio and Górecki 1968 - Acta Theriologica  
+
+
+ 
+***  
+
+ 
+
+### Entry: November 26th, 2021
+
+#### General information:
+__Date__: 26-11-2021  
+__Author__: Cara A. Gallagher  
+__Trace tag__: Data evaluation         
+__Keyword__: Parameterization        
+__Title__: Estimating body condition and storage parameters     
+__Overview__: Estimating body condition and storage parameters from published data     
+__Files__:  
+* ~/EBIVRProject/Scripts/Input scripts/EBIV_body_composition_parameter_estimation.R  
+* ~/EBIVRProject/Scripts/Input scripts/EBIV_reproduction_parameter_estimation.R  
+* ~/BrainstormFiles/ModelParamsAndEquations.doc  
+
+  
+#### Specific details:  
+* Fetal body composition values of percent protein and fat were used as the average of the values found for animals aged 1 day old in Fedyk 1974 and Sawicka-Kapusta 1974  
+  * Assuming that day 1 composition is the same as fetal composition   
+* Maximum fetal masses were taken as the maximum day 1 mass in these papers plus two standard deviations (converted from standard error)  
+
+* To adjust growth curves for lean body mass, the percent fat was taken where available for growth sources used. When unavailable, the fat content was inferred based on the mass using the regression in Sawicka-Kapusta 1974. All unknown animals were from a captive laboratory environment, so the regression for this setting was used.   
+
+* As the percentage of lean mass made up by protein increases with age, values from Fedyk 1974 and Sawicka-Kapusta 1974 were used to fit a curve to this relationship  
+  * Fit using a Von Bertallanfy curve:  
+  
+```{r, results='hide', message=FALSE, echo = FALSE, warning = FALSE}
+sys.source("Scripts/Input scripts/EBIV_body_composition_parameter_estimation.R", envir = knitr::knit_global())
+proLMPlot
+```
+  
+* for deposition inefficiencies used values from rats in Pullar and Webster 1977, but can look to other sources later, especially if model is sensitive to this parameter  
+
+***  
+
+
+### Entry: December 3rd, 2021
+
+#### General information:
+__Date__: 03-12-2021  
+__Author__: Cara A. Gallagher  
+__Trace tag__: Data evaluation         
+__Keyword__: Parameterization        
+__Title__: Estimating fuel metabolism     
+__Overview__: Estimating relationship between stores and fuel mobilization from published data     
+__Files__:  
+* ~/EBIVRProject/Scripts/Input scripts/EBIV_body_composition_parameter_estimation.R  
+* ~/BrainstormFiles/ModelParamsAndEquations.doc  
+* ~/EBIVRProject/Data/Parameterization/Storage/FatnessData.xlsx   
+
+
+#### Specific details:  
+* Animals should follow the stages of mammalian starvation with:  
+  * Stage I: Primarily glycogen use  
+  * Stage II: Glycogen stores are exhausted, switch to primarily fat use  
+  * Stage III: As fat stores decrease, switch to protein catabolism  
+* Some conflicting accounts on fuel selection in voles (e.g., Mosin 1984 vs. Voltura & Wunder 1998)  
+* To estimate the percent fuel partitioning based on body mass, e.g. the Forbes theory (Hall 2007 - British Journal of Nutrition), a curve was fit to percent body fat (adiposity or storage level) using eqn 8 in Caloin 2004 - Am J Physiol Endocrinol Metab  
+  * Curve was fit to values from three rat studies:  
+    * Belkhou et al. 1991; Dunn et al. 1982; Cherel et al. 1992  
+  * To attempt to get more representative values of protein use the average storage levels were used rather than only initial values  
+    * This resulted in a curve that was similar to but a bit more conservative with protein use as the ones presented in Caloin 2004 - which makes sense  
+  * The curve was fit using NLS in R and produced a gamma value of 0.015  
+
+* For evaluation: Can use patterns of body condition changes with fasting:  
+  * Voltura & Wunder 1998 - Physiological Zoology
+  * Mustonen et al. 2008 - J Comp Physiol B  
+  * Zhan et al. 2009 - Journal of Thermal Biology  
+
+* Resulting curve: 
+  
+```{r, results='hide', message=FALSE, echo = FALSE, warning = FALSE}
+sys.source("Scripts/Input scripts/EBIV_body_composition_parameter_estimation.R", envir = knitr::knit_global())
+proMobPlot
+```  
+
+* Estimated the maximum storage level using data from: Sawicka-Kapusta 1974, Fedyk 1974, (data in FatnessData.xlsx) & Tidhar and Speakman 2007 (range given in ms)  
+  * Maximum fat percentage decided on was 35.1% - estimate from Fedyk 1974 as the maximum value found when adding one standard deviation to mean values  
+
+
+***  
+
+### Entry: December 7th, 2021
+
+#### General information:
+__Date__: 07-12-2021  
+__Author__: Cara A. Gallagher  
+__Trace tag__: Data evaluation         
+__Keyword__: Parameterization        
+__Title__: Various reproduction parameters      
+__Overview__: Estimating various parameters for reproductive calculations including efficiencies  
+__Files__:  
+* ~/EBIVRProject/Scripts/Input scripts/EBIV_reproduction_parameter_estimation.R  
+* ~/BrainstormFiles/ModelParamsAndEquations.doc  
+* ~/EBIVRProject/Scripts/Input scripts/EBIV_mortality_parameter_estimation.R  
+
+
+#### Specific details:  
+* Efficiency of milk production used as value from utilizing body stores in rats from Romero et al. 1975 and Bondi 1982  
+  * Does not include potential reduced efficiency with use of dietary energy, but used as a simplifying assumption  
+* Inefficiency of pup growth taken as 88% for fat sand rats in Kam & Degen 1993 - Journal of Theoretical Biology   
+* As offspring have reduced maintenance costs due to decreased capability of thermogenesis and huddling behavior (Chi Qingsheng & Wang Dehua 2005), offspring BMRs were reduced from the base BMR curve by a factor derived from the energy provided to pup maintenance in Kam, Khokhlova and Degen 2006 for altricial species of a similar size to bank voles (Peromyscus maniculatus, Peromyscus leucopus, Mus musculus & Phodopus sungorus) compared to the BMR relationships for mice and hamsters in Koteja & Weiner 1993  
+  * This resulted in offspring costs that were 50.1% of the predicted values from the relationships  
+  * This would include any inefficiencies with using milk energy for covering maintenance costs (see Kam, Khokhlova and Degen 2006)  
+  
+* Struggled to find correct derivative for calculating change in fetal mass, required that I convert mass to ln scale before adding then use exp() to get updated in mass in non ln scale - will have to come back to but works for now, just isn't pretty  
+
+* For placental growth, just used the relationship for mice in Mu et al. 2008, which I believe is for each independent placenta  
+  * Energy density pulled from rats in Luz and Griggio 1996 as 3249.9 J / g  
+  * Deposition efficiency calculated as 50.1% from percent lipid and protein from Greizerstein 1982 for rates and deposition efficiencies of these tissues from Pullar and Webster 1977  
+
+* Will use Brody 1968 to calculate heat increment of pregnancy, but will then need to make sure that fetal and placental masses are not added to mom's mass for BMR estimation, as a reminder the heat of gestation includes:  
+  * energy expense of maintenance of the pregnant uterus  
+  * "work" of growth  
+  * increased work of mother (increased circulatory, respiratory, and excretory activities)  
+  * endocrine influences on metabolism of the mother  
+* It is calculated as the extra heat production of resting animals during gestation above the non-gestation level  
+
+* Decided to adjust max storage level for the water content of fat. Water should be included in all processes related to deposition and mobilization of fat.  
+
+* Gathered some basic reproductive parameters from the literature:  
+  * Gestation duration  
+  * Implantation delay for mothers nursing offspring  
+  * Nursing duration  
+  * Age of maturity  
+  * Mating period  
+  * And found a relationship between body mass and number of ova produced! In Brambell & Rowlands, 1936  
+* Started a new script for mortality parameters (EBIV_mortality_parameter_estimation.R)  
+
+
+
+
+***  
+
+
+### Entry: December 13th, 2021
+
+#### General information:
+__Date__: 13-12-2021  
+__Author__: Cara A. Gallagher  
+__Trace tag__: Data evaluation         
+__Keyword__: Parameterization        
+__Title__: Overwinter mortality probabilites        
+__Overview__: Estimating overwinter mortality from literature    
+__Files__:  
+* ~/EBIVRProject/Scripts/Input scripts/EBIV_mortality_parameter_estimation.R  
+* ~/BrainstormFiles/ModelParamsAndEquations.doc  
+
+
+#### Specific details:  
+* Pulled overwinter survival probabilites for males and females from:  
+  * Koskela, 1998; Oksanen et al. 2001; Kallio et al. 2007; Boratyński et al. 2010; Haapakoski et al 2012  
+* Presented as average and range found for each  
+
+***  
+
+
+### Entry: December 15th, 2021
+
+#### General information:
+__Date__: 15-12-2021  
+__Author__: Cara A. Gallagher  
+__Trace tag__: Data evaluation         
+__Keyword__: Parameterization        
+__Title__: Storage related mortality, reproduction, and energy intake           
+__Overview__: Representing storage related mortality and reduced reproductive investment as logistic functions and energy intake as increasing with decreasing storage level      
+__Files__:  
+* ~/BrainstormFiles/ModelParamsAndEquations.doc  
+
+
+#### Specific details:  
+* Decided to model all three processes (survival, pregnancy, and lactation) as logistic functions, similar to as in JP's muskox model (Desforges et al. 2020)   
+  * using the format prob = 1/(1+e^-k*(SLscaled - c))  
+  * where:  
+    * k = the process specific steepness constant (controls how steep the relationship is)  
+    * SLscaled = SL / SLmax of the mother (where relevant)  
+    * c = midpoint of the curve (50% probability)   
+* Will have to calibrate k and c for each process  
+* this will allow though for the mothers to cover progressively more of the calf needs as they get fatter, so pups with max growth & storage will only occur when the mom is also at her maximum fatness  
+
+* starting model prototyping now!!  
+
+***  
+
+
+### Entry: December 16th, 2021
+
+#### General information:
+__Date__: 16-12-2021  
+__Author__: Cara A. Gallagher  
+__Trace tag__: Model description           
+__Keyword__: Model development          
+__Title__: Starting model prototyping             
+__Overview__: Developing prototype of energy budget model      
+__Files__:  
+* ~/EBIVABM/EBIVPrototype.nlogo    
+
+
+#### Specific details:  
+* Created a simple landscape generation process (setup-landscape) where food is distributed randomly covering a certain percentage of the landscape (perc-resource-patches)  
+  * Animals can eat these patches, then at the start of each day they regrow  
+* Also created the initial create animals procedure (create-animals) where animals are randomly placed in the landscape and given some initial properties  
+* Animals move once per tick using a correlated random walk for now  
+* Animals consume all food in a patch if they stop on a patch with food   
+
+* Implemented BMR costs based on body mass, checked against data   
+* Implemented costs of transport and checked each component  
+
+* Most variation ignored for this initial implementation  
+
+* Implemented growth costs, found that I was modeling growth using length not mass equation from Sibly et al 2013 so had to correct in growth model code  
+  * Will need to check to make sure that energy costs makes sense, seems a bit high  
+
+
+***  
+
+
+### Entry: December 21st, 2021
+
+#### General information:
+__Date__: 21-12-2021  
+__Author__: Cara A. Gallagher  
+__Trace tag__: Model description           
+__Keyword__: Model development          
+__Title__: Continuing model prototyping             
+__Overview__: Coding pregnancy in the energy budget model      
+__Files__:  
+* ~/EBIVABM/EBIVPrototype.nlogo    
+* ~/EBIVRProject/Data/Parameterization/Reproduction/LitterSizePupMass.csv   
+
+
+#### Specific details: 
+* Started pregnancy coding  
+* Using foreach loops and reporters so that each pup can be calculated for and recorded separately  
+* Decided to remove heat of gestation equation since in many animals, including voles, heat production is not significantly higher for pregnant vs non-pregnant females (see Trebatická et al. 2007)
+  * Fetal and placental masses will be included in equations using mothers mass to included gestation masses in this way, and inefficiences of growth are factored into fetal and placental growth equations 
+* Regardless, I thought it would be good to look at offspring mass at birth by litter size as a potential evaluation pattern for the model  
+  * Didn't find any good relationships for this in pubs, but found lots of mentions of relationship between pup mass and litter size and data for the relationship in  Mappes and Koskela 2004  
+  * Pulled data from this pup using Automeris WebPlotDigitizer  
+  * Fit with LM and got: litter mass = (-0.084 * litter size + 2.26) * litter size
+* Resulting curve: 
+  
+```{r, results='hide', message=FALSE, echo = FALSE, warning = FALSE}
+sys.source("Scripts/Input scripts/EBIV_reproduction_parameter_estimation.R", envir = knitr::knit_global())
+sizeMassPlot
+```  
+
+
+
+
+
+
+***  
+
+
+### Entry: December 22nd, 2021
+
+#### General information:
+__Date__: 22-12-2021  
+__Author__: Cara A. Gallagher  
+__Trace tag__: Model description           
+__Keyword__: Model development          
+__Title__: Continuing model prototyping - reproduction             
+__Overview__: Coding reproduction in the energy budget model      
+__Files__:  
+* ~/EBIVABM/EBIVPrototype.nlogo    
+
+
+#### Specific details: 
+* Added gestation period as a global  
+* Realized that placental growth rates are only good after 10 gestation days
+  * Will keep at zero when returning a negative number   
+* Incorporated lactation costs and hooked everything up  
+* Found some minor typo bugs and fixed  
+* Things look pretty good, next steps will be to get storage and energy intake hooked up, then allocation and mortality :)  
+
+
+***  
+
+### Entry: January 3rd, 2022
+
+#### General information:
+__Date__: 03-01-2022  
+__Author__: Cara A. Gallagher  
+__Trace tag__: Model description           
+__Keyword__: Model development          
+__Title__: Continuing model prototyping - storage and energy intake             
+__Overview__: Coding storage and energy intake in the energy budget model      
+__Files__:  
+* ~/EBIVABM/EBIVPrototype.nlogo    
+
+
+#### Specific details: 
+* Added storage related equations for mobilization  
+  * Will track mobilized energy throughout energy budget procedure and only update once at the end  
+* Have changed the lean mass percent protein calculation to a reporter and the output as a turtles own parameter so it can be used throughout  
+* As a note, remember that if time interval is changed, then the 0.5 has to change in the function response equation  
+
+* Have incorporated basic energy intake equations, will need to double check these  
+* Next will need to include allocation and add leftover energy to fat stores  
+
+***  
+
+### Entry: January 5th, 2022
+
+#### General information:
+__Date__: 05-01-2022  
+__Author__: Cara A. Gallagher  
+__Trace tag__: Model description           
+__Keyword__: Model development          
+__Title__: Continuing model prototyping - allocation and mortality algorithms             
+__Overview__: Coding allocation and mortality algorithms in the energy budget model      
+__Files__:  
+* ~/EBIVABM/EBIVPrototype.nlogo    
+
+
+#### Specific details: 
+* Adding allocation algorithms 
+  * For vital costs: Not sure how to check stores to see if enough energy exists to cover vital costs, due to combined use of fat and muscle  
+* Added logistic equation for growth reduction as well   
+* When adding allocation reduction to pregnancy, I noticed that placental masses don't seem to decrease similarly to fetal masses. Realized that this is due to placental growth being based on gestational age, rather than current placental mass, so animals can "catch up" whenever they find food. Will leave as is. Also placental costs towards the end go a bit negative due to curve used. A decrease of ~0.02 g. Will also leave as is.  
+* Didn't make sense that females would allocate enough energy to their offsprings fat reserves to get them to max fatness, even if their storage levels were low, just because they ingested a lot of energy in a single timestep, so decided to make mom's storage level the target rather than the max  
+* Added procedures for estimating mortality - abortions, offspring death, and adult mortality  
+  * for now tissue is not reabsorbed by mothers, but can be added  
+* Seems to be a weird bug with total energy use, spikes to extremely high numbers when lactation starts  
+* The core code for the prototype is in now. Next steps are to test it thoroughly and then share with others.  
+
+
+***  
+
+
+### Entry: January 10th, 2022
+
+#### General information:
+__Date__: 10-01-2022  
+__Author__: Cara A. Gallagher  
+__Trace tag__: Implementation verification           
+__Keyword__: Software verification/Testing          
+__Title__: Finishing touches on prototype             
+__Overview__: Testing and implementing final bits of prototype before sharing        
+__Files__:  
+* ~/EBIVABM/EBIVPrototype.nlogo   
+* ~/EBIVRProject/Scripts/Input scripts/EBIV_energy_intake_parameter_estimation.R  
+* ~/EBIVRProject/Scripts/Input scripts/EBIV_COT_approach_decision.R  
+
+
+
+#### Specific details: 
+* Added a heat increment of feeding factor based on two studies in mice (though a few other rodent values were found, see .R script)   
+  * One value was presented as % of total ingested energy so this was converted to % MEI using AE value for voles  
+* Added gestational mass to mass for calculations   
+* Decided to change the way that lactation costs are allocated to. Mom's now calculate only the needs for BMR and growth then can calc total lactation based on storage level using the modified perc-allo-lact equation (which goes from 0 to 2, with 1 representing fulfilling growth and BMR but no storage)  
+  * Did some testing of this and seems to be ok but will have to look into it again after fixing energy intake  
+* For energy intake, I realized that the functional response curve I was using was assuming that animals regardless of size were capped at the same level and wouldn't allow lactating females to access more food.   
+  * I decided that for now, I don't really have the data to fit this correctly and have instead incorporated a mass-dependent daily cap (IR-max) based on the value in Piątkowska & Weiner 1987. For pregnant and lactating females, the masses of gestational tissues and offspring are included, will check outputs against relevant sources for how energy intake changes during reproduction as in Kaczmarski 1966.  
+* Did some additional checks of the COT outputs and results fell within the range of mouse values, won't include here but can be seen in EvalPlot and EvalPlotPerMass in the EBIV_COT_approach_decision.R script    
+* Decided to add some equations to track total heat production separately from production costs so that these values can be compared to empirical respiration data, values are denoted with "no_prod"   
+  * Only for growth, pregnancy, and lactation  
+
+
+
+***  
+
+
+### Entry: January 20th, 2022
+
+#### General information:
+__Date__: 20-01-2022  
+__Author__: Cara A. Gallagher  
+__Trace tag__: Implementation verification           
+__Keyword__: Software verification/Testing          
+__Title__: Testing model components             
+__Overview__: Testing submodels independently         
+__Files__:  
+* ~/EBIVABM/EBIVPrototype.nlogo   
+* ~/EBIVRProject/Scripts/Input scripts/EBIV_growth_models.R  
+
+#### Specific details: 
+* Minorly modified how growth works by applying storage level dependent allocation value to the maximum growth calculation rather than estimating after and apply this modifier to both the rate of growth and maximum lean mass  
+  * This approach results in nice curves at various storage levels and allows for a lot of variation in growth  
+  * This allows for animals to grow faster larger or smaller than mean values while still maintaining the general growth cuve shape and not ultimately aiming for the same asymptotic value  
+  * Will be really dependent on calibration of allocation curve  
+  * Quite happy with how it turned out:  
+```{r, results='hide', message=FALSE, echo = FALSE, warning = FALSE}
+sys.source("Scripts/Input scripts/EBIV_growth_models.R", envir = knitr::knit_global())
+outplot
+```  
+* Also realized that the deposition efficiency of protein shouldn't be offset by the percent protein of lean mass so have removed this  
+* Found a couple of typographical bugs and removed  
+  * These seem to have revealed some issues with energy intake though, animals don't seem to be able to eat enough to cover costs even with lots of food around  
+  * Has to do with daily max limit - this seems like it's maybe too low? Look into this   
+  * Animals were not consuming enough energy to meet realistic daily energy intake values  
+  * Updated energy density of food to include water content (since data was for dry mass)  
+  * Updated max energy metabolized per day based on mass using the data for non-mated and unshaved animals in Sadowska et al. 2016 - calculated per unit metabolic mass to allow smaller individuals to eat relatively more   
+  * Bug was actually being caused by a parentheses error in the fat synthesis equation - fixed now   
+* Body condition seems to drop dramatically at offspring birth, look into why 
+* Moved mortality to daily tasks and have storage related mortality directly in storage procedure  
+
+
+***  
+
+
+### Entry: February 1st, 2022
+
+#### General information:
+__Date__: 01-02-2022  
+__Author__: Cara A. Gallagher  
+__Trace tag__: Model description           
+__Keyword__: Model development           
+__Title__: Reworking execution order             
+__Overview__: Changing model execution to calculate costs and allocate separately         
+__Files__:  
+* ~/EBIVABM/EBIVPrototype.nlogo   
+
+#### Specific details: 
+*  Decided to separate energy cost calculation and allocation since energy intake is estimated based on costs and how it was before led to a delay between energy use and energy intake  
+* Also removed the reporters for the reproduction section, decided that it was cleaner to include instead using the map command in line  
+
+
+***  
+
+
+### Entry: February 1st, 2022
+
+#### General information:
+__Date__: 01-02-2022  
+__Author__: Cara A. Gallagher  
+__Trace tag__: Implementation verification           
+__Keyword__: Software verification/Testing          
+__Title__: Checking repro and loco outputs, and changes to movement and intake   
+__Overview__: Testing reproduction and activity outputs against data and linking movement probability to energy balance             
+__Files__:  
+* ~/EBIVABM/EBIVPrototype.nlogo   
+
+#### Specific details:  
+* When synthesizing tissue, lean mass is now deposited as well  
+* Decided to test whether calculated total costs for non-growing, non-reproducing animals matched data from forced treadmill experiments  
+  * When comparing to data from Rudolf et al 2017 for the running speeds where the max VO2 rates occurred, the model outputs were 76.7% of the recorded values  
+  * Looking into this, I found that in deer mice voluntary exercise at room temperature resulted in VO2 rates 71.6% of forced exercise in Chappell et al. 2004 (https://doi.org/10.1242/jeb.01213)  
+    * This could be due to a variety of reasons, but I think it makes sense to stick with the voluntary rather than forced outputs as the experimental setup sounds stress inducing  
+* Decided to add an ingestion rate record - called "food debt" so that animals can keep track of their energy balance and react accordingly  
+  * Probability of moving is now linked to food-debt in that animals that have a larger food debt (are in more extreme negative energy balance ) are more likely to move in a timestep - can be elaborated on (or not) later but I think this is a good system for now at least   
+
+***
+
+### Entry: February 19th, 2022
+
+#### General information:
+__Date__: 19-02-2022  
+__Author__: Cara A. Gallagher  
+__Trace tag__: Implementation verification           
+__Keyword__: Software verification/Testing          
+__Title__: Stepwise check of outputs  
+__Overview__:              
+__Files__:  
+* ~/EBIVABM/EBIVPrototype.nlogo   
+* ~/EBIVRProject/Scripts/Output scripts/Verification/EBIV_BMR_verification.R  
+* ~/EBIVRProject/Scripts/Output scripts/Verification/EBIV_COT_verification.R  
+* ~/EBIVRProject/Scripts/Output scripts/Verification/EBIV_growth_verification.R  
+* ~/EBIVRProject/Scripts/Output scripts/Verification/EBIV_reproduction_verification.R  
+* ~/EBIVRProject/Scripts/Output scripts/Verification/EBIV_storage_verification.R  
+* ~/EBIVRProject/Scripts/Output scripts/Verification/EBIV_intake_verification.R  
+* ~/EBIVRProject/Scripts/Output scripts/Verification/EBIV_FMR_verification.R  
+
+
+#### Specific details:  
+* Verification settings:  
+  * perc-resource-patches = 0.75  
+  * max-resources = 100  
+  * r-growth = 5.0  
+  * crw-wiggle = 45  
+  * resources-dynamic? = true  
+  * using data from all animals in simulation year 10 
+* Saving outputs to the R project Data > Verification folder  
+
+* BMR compared to various sources, shown here for the three sources used for calibration and three curves (one for all mammals (Kleiber 1961), one for small mammals (Speakman 2000), and one for voles (Koteja & Weiner 1993))    
+  
+```{r, results='hide', message=FALSE, echo = FALSE, warning = FALSE}
+sys.source("Scripts/Verification scripts/EBIV_BMR_verification.R", envir = knitr::knit_global())
+BMRVerPlot
+```  
+
+* COT outputs compared to six different relationships between speed and energy use:  
+
+```{r, results='hide', message=FALSE, echo = FALSE, warning = FALSE}
+sys.source("Scripts/Verification scripts/EBIV_COT_verification.R", envir = knitr::knit_global())
+COTVerPlot
+```  
+
+* Growth outputs were compared to the original data to fit the curves. There seems to be very little variation in the model outputs, but I guess this makes sense since the environment is so consistent. This variation isn't shown in the plot because putting the many individual model output points over made it hard to compare with the data, so I am just showing as a default ggplot gam curve here.  
+
+
+```{r, results='hide', message=FALSE, echo = FALSE, warning = FALSE}
+sys.source("Scripts/Verification scripts/EBIV_growth_verification.R", envir = knitr::knit_global())
+growthVerPlot
+```  
+
+
+* Pregnancy outputs were compared to the original data used to fit the curves. Fetal masses do vary with differences in investment. Overall the fit is good but is a bit low in the middle of the gestation period.  
+  * Maximum costs of growth and gestation are pretty similar overall (~60 J 30min-1) but much lower than e.g. locomotion and BMR costs.   
+  * However the relationship between pup mass at birth and litter size does not fit empirical relationship where larger litter size is associated with lower birth mass. Could be due to abortion rates, so animals with smaller litters tend to end up there due to being in poor condition.  
+
+
+
+```{r, results='hide', message=FALSE, echo = FALSE, warning = FALSE}
+sys.source("Scripts/Verification scripts/EBIV_reproduction_verification.R", envir = knitr::knit_global())
+PregVerOut
+```  
+
+* Lactation costs were compared to the results from Sadowka et al. 2016, which were independent from model development. Fit was quite good with the exception that mothers tend to be a bit smaller than the females were in the empirical study.  
+
+```{r, results='hide', message=FALSE, echo = FALSE, warning = FALSE}
+sys.source("Scripts/Verification scripts/EBIV_reproduction_verification.R", envir = knitr::knit_global())
+fig1Plot
+```  
+
+* When outputs were compared based on litter size, results don't level off at greater larger sizes like they do in the empirical patterns. Pup mass at weaning actually increased with litter size. Again I think this may be due to animals in better condition have larger litters and so have bigger offspring, will need to look into this more.  
+
+```{r, results='hide', message=FALSE, echo = FALSE, warning = FALSE}
+sys.source("Scripts/Verification scripts/EBIV_reproduction_verification.R", envir = knitr::knit_global())
+fig2Plot
+```  
+
+* The relative numbers of born and weaned animals was compared to mean available data. The number of conceived pups however could not be compared. It does seem like the number of births are lower than would be expected, however they are often older even than the number of conceived pups. So either the number of conceived pups are too low or the abortion rate is high.  
+
+```{r, results='hide', message=FALSE, echo = FALSE, warning = FALSE}
+sys.source("Scripts/Verification scripts/EBIV_reproduction_verification.R", envir = knitr::knit_global())
+reproStatsPlot
+```  
+
+* The percent body mass composed of adipose tissue was compared to empirical estimates (adjusted using percent water composition of adipose). The overall adipose content and adipose percent at death were each compared to the empirical data. The percent at death lined up fairly nicely with the minimum values found in the data. While the values gathered from living animals on average overlapped well with the data, however there are two peaks observed at very high fat percentages of around 25%. I will look into this later. Could be related to the ingestion rate modifier equation? e.g. it's difficult to get over this point.  
+
+
+```{r, results='hide', message=FALSE, echo = FALSE, warning = FALSE}
+sys.source("Scripts/Verification scripts/EBIV_storage_verification.R", envir = knitr::knit_global())
+fullSLPlot1
+```  
+
+* Ingestion rates were compared based on reproductive state to results from six different empirical articles. I'm quite happy with these fits. The maximum ingestion rates are high but core overlap is high.   
+
+
+```{r, results='hide', message=FALSE, echo = FALSE, warning = FALSE}
+sys.source("Scripts/Verification scripts/EBIV_intake_verification.R", envir = knitr::knit_global())
+intakeVerPlot
+```  
+
+
+* Field metabolic rates were evaluated against empirical relationships and data. Field metabolic rates based on mass fit empirical relationships alright, with the King 1974 relationship fitting the best. However there are some very high points which occur. This could be due to increasing FMR with increasing activity. Some animals, when starving, can be active 100% of the time. 
+
+```{r, results='hide', message=FALSE, echo = FALSE, warning = FALSE}
+sys.source("Scripts/Verification scripts/EBIV_FMR_verification.R", envir = knitr::knit_global())
+FMRVerPlot1
+```  
+
+  * Mass specific FMR increased with activity: 
+  
+```{r, results='hide', message=FALSE, echo = FALSE, warning = FALSE}
+sys.source("Scripts/Verification scripts/EBIV_FMR_verification.R", envir = knitr::knit_global())
+FMRVerPlot2
+```  
+
+  * When compared per state using results from 5 different studies, outputs could only be compared for nonreproductive and lactating voles. However there was a lot of overlap between the outputs:  
+
+```{r, results='hide', message=FALSE, echo = FALSE, warning = FALSE}
+sys.source("Scripts/Verification scripts/EBIV_FMR_verification.R", envir = knitr::knit_global())
+FMRVerPlot3
+```  
+
+* For a cohort of 100 animals, their process specific metabolic costs were tracked and averaged per timestep. Overall the costs look ok, with the excetion of growth, which, as seen above, seems to be consistent throughout their lives rather than really decreasing with age. We will have to think about this.  
+
+```{r, results='hide', message=FALSE, echo = FALSE, warning = FALSE}
+sys.source("Scripts/Verification scripts/EBIV_FMR_verification.R", envir = knitr::knit_global())
+FMRVerPlot4
+```  
+
+
+
+
+***  
+
+
+### Entry: March 28th, 2022
+
+#### General information:
+__Date__: 28-03-2022  
+__Author__: Cara A. Gallagher  
+__Trace tag__: Implementation verification           
+__Keyword__: Software verification/Testing          
+__Title__: Testing key issues found in verification    
+__Overview__: Looking into 4 key issues found in verification and some other code cleanup               
+__Files__:  
+* ~/EBIVABM/EBIVPrototype.nlogo   
+
+
+#### Specific details:  
+* Four weird points found in model testing: pup size & litter size, all day activity, also weird SL peaks & growth costs  
+  * Will look into each separately  
+
+* 1: Growth costs:  
+  * Base parameter values: growth-prob-const 10, growth-prob-mid 0.3  
+  * So by noting out the line where animals actually adjust their lean mass based on mobilization and assimilated energy I see that growth does drop to zero as animals reach the maximum lean mass. This suggests to me that the continuous growth we see in the data is actually from these dynamics in lean mass mobilization and deposition (line: set lean-mass lean-mass - lean-mass-mobilized + lean-mass-synthesized)  
+  
+* 2: Storage level peaks:  
+  * Created an output file and print statements to keep track of storage levels per state  
+  * Seems like it is really the adults that have the high storage levels and the peak at ~0.25 % is present in all adult categories  
+  * The peak is further skewed by the overwinter period where basically only adults are present  
+  * Will need to look into why adults have such high storage levels  
+  * Could be due to overwinter survival and excess food resources during this time, will add a cosine function to add seasonality in maximum food levels as a test
+  * Added a seasonality? switch and seasonal-var input to use a cosine function to vary maximum resource levels - doesn't seem to affect overwinter fatness too much though    
+  * Also added an overwinter-skip? switch and incorporated skipping  
+  * Added overwinter mortality during this time - this helped peak at 25% body fat a bit but still there     
+  * Playing with resource parameters to see how they impact body fat (base: max = 100, growth = 5):  
+    * max resources seems to have a larger effect on population size than the body fat distribution shape  
+    * r-growth seems to have a similar effect  
+    * Found bug: probability of movement is always 100 at start of day because of clearing of daily-m-tot  
+      * Decided to change daily-m-tot to a rolling list of the last 48 ticks instead  
+  * This bug ^^ seems to have contributed pretty heavily to the storage level peaks issue  
+    * Rechecked activity outputs and all look good. Some animals still reach 100% active but I guess that is to be expected for starving animals 
+    
+* 3: Pup mass & litter size:   
+  * Testing different combinations of the const and mid parameters for the allocation equation and the modifier for offspring survival probability   
+  * Seems like reduced investment can occur at larger litter sizes, but not on average  
+  * made n-emb random, should remove this!!  
+  * Can get negative relationship with some combination of allocation and mortality parameters  
+  * This will need to be calibrated  
+
+* 4: all day activity:  
+  * This was partially due to a bug in the movement probability equation due to the daily estimates of energy use being 0 at the start of the day  
+  * Have fixed this bug by adding rolling lists of energy use for the last 48 ticks  
+  * Animals still hit 100% sometimes but this should only happen now when they are starving  
+    
+* Some additional cleanup:  
+  * Decided to instead of hatching weaned offspring to instead ask the patch to sprout them so that all of the state variable resetting code could be deleted  
+  * Checked when daily estimated requirements for moving were less than zero (in "move"), only first timestep  
+  * Went through and changed growth to growth and lean mass deposition throughout  
+  * Did some naming cleanup and did another pass on the parameter and equation table, should be good now  
+  
+  
+  
+
+***  
+
+
+### Entry: April 14th, 2022
+
+#### General information:
+__Date__: 14-04-2022  
+__Author__: Cara A. Gallagher  
+__Trace tag__: Model description           
+__Keyword__: Model development               
+__Title__: Final code modifications before finalizing prototype      
+__Overview__: Adding variation, heritability, & finalizing parameters                
+__Files__:  
+* ~/EBIVABM/EBIVPrototype.nlogo   
+* ~/EBIVRProject/Scripts/Input scripts/EBIV_BMR_parameter_estimation.R
+* ~/EBIVRProject/Scripts/Input scripts/EBIV_reproduction_parameter_estimation.R
+
+
+#### Specific details:  
+* Including variance:  
+  *  Looking at the BMR data used to fit curve, the percent deviation from the BMR curve doesn’t seem to change too much with mass, may be able to include as a heritable modifier value?   
+  * Have decided to just add a parameter for variation for the three different processes (ITV-BMR - maintenance, ITV-growth - growth allocation, and ITV-repro -  reproduction allocation)   
+  * ITV-BMR directly alters the output from the base BMR curve while the two allocation parameters affect the midpoint of the relationship  
+  * Created a list for keeping track of the offspring BMR value that the mom holds  
+  * For now offspring just directly inherit mother's values   
+  
+
+```{r, results='hide', message=FALSE, echo = FALSE, warning = FALSE}
+sys.source("Scripts/Input scripts/EBIV_BMR_parameter_estimation.R", envir = knitr::knit_global())
+varP
+```  
+
+
+* Inheritance:  
+  * Heritable values - BMR, allocation to growth, reproduction, food debt where move-prob = 1, & survival probabilities  
+
+* Altered movement decisions:  
+  * Changing the probability of moving to be a linear stepwise function based on past encounter rates of available food   
+  * Added a list to keep track of the last 10 foraging attempts and using the average of this number as the minimum value where animals could attempt to move  
+    * May have to play with this 10 value as it is arbitrary    
+
+* Number of conceived offspring:
+  *  Compiled more refs for embryo counts (see EBIV_reproduction_parameter_estimation.R)    
+  * Decided to use the mean low and mean high values as a range in the model based on data from 4 papers (Brambell and Rowlands 1936, Nerquaye-Tetteh and Clarke 1990, Nyholm and Meurling 1979, & Wiger 1979)  
+    * This resulted in a range of 2 to 9 embryos  
+    
+* Movement speed and turning angles:  
+  * Movement speed is selected randomly in meters per s based on mean and maximum speeds of control animals reported in Maiti et al. 2019  
+  * Used a gamma distribution to implement in the model - checked using a new netlogo file and distribution works as intended   
+  * Two new parameters added (speed-mean and speed-max)  
+  * After looking at track data from voles on a 10 min interval (from animal ecology group), voles seem to turn around A LOT! Decided to subdivide movements to this timescale (3x per tick) and then just pick a direction randomly  
+    * Implemented but will need to test  
+  * Bug found with random gamma pull, doesn't work if using mean and max as m per s values, changed to cm per s in the gamma calculation  
+  
+ 
+   
+
+***  
+
+
+### Entry: May 10th, 2022
+
+#### General information:
+__Date__: 10-05-2022  
+__Author__: Cara A. Gallagher  
+__Trace tag__: Model description           
+__Keyword__: Model development               
+__Title__: Final code modifications before finalizing prototype (cont)     
+__Overview__: Adding heritability & updating patches only on interaction                
+__Files__:  
+* ~/EBIVABM/EBIVPrototype.nlogo   
+    
+    
+#### Specific details:  
+* Resource growth:  
+  * Changed so that patches only update resource values when they are encountered by an animal as an optimization  
+  * Patches now hold a "last-eaten" state variable and then when regrowing resources, use the difference in time from the current tick to when last eaten multiplied by the resource growth per tick   
+  * Resource growth is now called in the energy intake procedure before pulling the food level of the patch  
+  
+  
+* Inheritance:   
+  *  Initialized values using uniform distribution  
+  * Offspring pull from normal distribution with mothers value as the mean and sd determined using global value  
+  
+***  
+
+
+### Entry: June 2nd, 2022
+
+#### General information:
+__Date__: 02-06-2022  
+__Author__: Cara A. Gallagher  
+__Trace tag__: Model description           
+__Keyword__: Model development               
+__Title__: Final code modifications before finalizing prototype (cont)     
+__Overview__: Adding stomach capacity to link to BMR variation                  
+__Files__:  
+* ~/EBIVABM/EBIVPrototype.nlogo   
+    
+    
+#### Specific details:  
+* After chatting with Melanie on 31.05.2022 we decided to focus on energy acquisition as varying with BMR  
+* This is supported by theory as well as empirical work (Koteja 1996 - https://doi.org/10.1086/physzool.69.5.30164243)   
+* Decided to let gut capacity vary with total costs to incorporate increased gut fill with increased demands from BMR and lactation  
+  * Calculated gut capacity as 1/6th of the daily total costs from the previous day and stomach clearance rate as 3.5 hours following an empirical study in meadow voles which found that animals could fill their guts in 6 30-min feeding sessions and maintain intake rates similar to ab lib conditions (in Zynel and Wunder 2002)   
+  * Because animals in the paper could eat their to their full stomach fill in 30 minutes, which is the timestep in the model, I have decided to remove the max-IR-timestep parameter and base maximum consumption in a timestep on the gut fill instead  
+  * Maximum stomach fill (max-stomach-fill) updates once per day in daily-tasks procedure  
+  * Not working as a 6th of daily costs, animals just die   
+* Animals now do not move if their guts are full to conserve energy  
+  
+* Evidence for doing this:  
+  * Stomach size increases with increasing BMR in voles in Song and Wang 2006  
+  * Turnover time decreased by 26% when MEI increased by 30% in voles in Derting & Bogue 1993  
+  * Dry matter gut fill for a field vole was 5.4% of body weight in Hagen et al. 2018  
+  * Dry matter gut fill for double gut contents in Meese 1971 was 5.07% BM  
+  * Minimum number of foraging bouts per 6 hrs was 2.9 in Liesenjohann & Eccard 2008  
+  
+  
+***  
+
+### Entry: June 8th, 2022
+
+#### General information:
+__Date__: 08-06-2022  
+__Author__: Cara A. Gallagher  
+__Trace tag__: Data evaluation           
+__Keyword__: Patterns               
+__Title__: Prepping patterns for calibration       
+__Overview__: Organizing and preparing patterns for use in calibration                    
+__Files__:  
+* ~/EBIVRProject/Scripts/Output scripts/Calibration/EBIV_calibration_pattern_prep.R  
+    
+    
+#### Specific details:   
+* Prepared the file EBIV_calibration_pattern_prep.R to organize patterns and design exact use 
+* Decided to reserve the last subset (pattern numbers 18 - 22) for evaluation post calibration  
+
+* Random notes:  
+  * Bug found with aging, animals needed to age overwinter - fixed  
+  * Related - Animals also need to grow over this time  
+    * Since the 200 day skip is more than enough for animals to grow to their maximum size, here they just grow to the asymptotic value modified by their percent allocation to growth (based on storage level). This provides variability in their mass at the start of the breeding season consistent with their storage levels at the end of the year  
+  * Patch size has a large impact on population dynamics and probability of extinction... 500 m seems to give good results  
+  * Bug found with both growing and mobilizing lean mass within the same step. Since animals aren't actually growing they should get some reduction for the inefficiencies of growth; i.e. in the current system they are wasting energy  
+    * Fixed this by only having lean mass growth occur in the storage-dynamics procedure  
+    * Animals now compare energy allocated to lean mass growth to energy mobilized from lean mass then either grow or mobilize the net amount depending on whether this value is positive or negative  
+  
+ 
+***  
+
+### Entry: July 14th, 2022
+
+#### General information:
+__Date__: 14-07-2022  
+__Author__: Cara A. Gallagher  
+__Trace tag__: Model description           
+__Keyword__: Model development              
+__Title__: Prepping model for calibration       
+__Overview__: Creating a model version for calibration                       
+__Files__:  
+* ~/EBIVABM/EBIVModel.nlogo   
+* ~/EBIVRProject/Scripts/Output scripts/Calibration/EBIV_calibration_pattern_prep.R  
+
+    
+#### Specific details:   
+* Started a model version for calibration (EBIVModel.nlogo)  
+* Removed plots and started to add in specific outputs for the ID'd calibration patterns  
+* Found bug with growth, now animals seems to grow to huge sizes - due to if bug where lean mass calculations were only done under conditions which didn't make sense. Fixed now.  
+* All calibration pattern outputs are prepped and ready to be popped out of the model when needed :)   
+
+
+***  
+
+### Entry: August 16th, 2022
+
+#### General information:
+__Date__: 16-08-2022  
+__Author__: Cara A. Gallagher  
+__Trace tag__: Model output verification             
+__Keyword__: Calibration                
+__Title__: Setting up ABC script         
+__Overview__: Model cleanup for calibration and prepping nlrx script                         
+__Files__:  
+* ~/EBIVABM/EBIVModel.nlogo   
+* ~/EBIVRProject/Scripts/Output scripts/Calibration/EBIV_calibration_pattern_prep.R  
+* ~/EBIVRProject/Scripts/Calibration scripts/ABC_nlrx.R  
+
+    
+#### Specific details:   
+* Using nlrx package, setting up experiment  
+* Decided to go back to representing offspring using the same values rather than lists - saved ~ 25% processing time   
+* nlrx script running but pretty slowly, will run on multiple computers  
+
+
+***  
+
+### Entry: August 22th, 2022
+
+#### General information:
+__Date__: 22-08-2022  
+__Author__: Cara A. Gallagher  
+__Trace tag__: Model output verification             
+__Keyword__: Calibration                
+__Title__: Analyzing calibration outputs         
+__Overview__: Post processing outputs and assessing pattern fit                           
+__Files__:  
+* ~/EBIVRProject/Data/Calibration/CalOutputs21082022.csv    
+* ~/EBIVRProject/Data/Calibration/CalOutsC221082022.csv    
+* ~/EBIVRProject/Scripts/Calibration scripts/ABC_nlrx.R  
+
+    
+#### Specific details:   
+* Going to have to make all fits categorical, this is a lot of processing and need to make sure that patterns are of equal weight, so a yes no pass is needed for all   
+  * For patterns 3 & 4, instead of using RMSE, I will just compare to the curve + and - 25%, 90% of points should fall within this range to pass  
+    * Ages from 21 + & < 620 only  
+    * Sampling up to 1000 random points for each run, run times way too long if not done  
+  * Patterns 5 - 7: Also using 1000 random points and 90% pass fail, like with 3 & 4   
+  * Patterns 8 - 10: Had to repull values for each litter size, used automeris   
+  * Patterns 11 & 12: decided to just have the mean of each run fall within the range, since they are means   
+  * Pattern 14: decided to go + - 25%  (capped at 1) from the curve from the reference, 90% pass fail  
+  * Pattern 16: 90% pass fail below 3% 
+  * Pattern 17: Was using total energy use (inlc production costs) needed to change to daily-m-tot-no-prod and rerun, though using + - 25% for this pattern as well 
+  * To get really any fits needed to expand p6, p7, and p14 to 50% clearance, but could maybe bring this back up with higher number of sims  
+  * Reduced max number of points to 500 to speed up bigger outputs  
+  * Patterns 2 & 13: checked that there are unique points to avoid overfitting  
+* Removed SL-max from allocation and survival relationships, was unneeded  
+* Updated landscape generation using code from Leonna (17th of December 2021) 
+* Added minimum number of 10 datapoints per mean for all patterns except linear regressions  
+* Converted calibration analysis file to using scaled error measurements rather than a pure pass fail:   
+  * This could be done for all patterns using the mean value to scale absolute error (so a value of 0 means a perfect fit, a value of 1 would be double or 0 the value)   
+  * For patterns using ranges, the range was instead used to scale error  
+  * Median values of overall error were used to assess pattern fit  
+  * For linear relationship patterns (2 & 11 I believe) this could not be done, so instead they remained pass (0) and fail (1) checks   
+
+
+***  
+
+### Entry: December 9th, 2022
+
+#### General information:
+__Date__: 09-12-2022  
+__Author__: Cara A. Gallagher  
+__Trace tag__: Model output verification             
+__Keyword__: Calibration                
+__Title__: Finalizing calibration results         
+__Overview__: Final decision on calibration results and cleanup of associated files                            
+__Files__:  
+* ~/EBIVRProject/Data/Calibration/CalAnalysisOuputs_08112022.csv    
+* ~/EBIVRProject/Scripts/Calibration scripts/ABC_output_results.R  
+* ~/EBIVRProject/Scripts/Calibration scripts/ABC_parameter_plots.R  
+
+    
+#### Specific details:   
+* Finally decided on calibration results!!  
+* Final run details:  
+  * 500,000 simulations (of which 212,240 finished)
+  * Results collected from simulation year 5
+  * Uniform sampling with LHS
+  * 16 empirical patterns (decided to ditch pattern 14, details below)  
+  * Used the mean of the absolute scaled errors to assess fit (described in entry on 22-08-2022)  
+* Using an mean scaled absolute error threshold of 0.3505 (or 35.05%), 50 parameter combinations were accepted  
+* All fit the empirical patterns nicely, except for pattern 5, where the body mass was much higher than both the data in pattern 3 and the value of 20.7 grams for adult bank voles in the pantheria database, and we didn't obtain the two phase investment slopes found in patterns 8 - 10, but still the fit is overall quite good  
+* Pattern 14 was rejected as at the average body mass for adult animals of 20.7 grams (from pantheria database) the probability of weaning even a single offspring successfully was < 10%, which didn't make sense   
+* Next steps:  
+  * Ensure population densities are consistent with literature estimates  
+  * Rerun patterns to check that fit holds after any changes needed for the first step  
+  * Assess other evaluation patterns (see EBIV_calibration_prep.R)  
+  * Run sensitivity analysis, global of all parameters and visual of calibrated parameters  
+  * SCENARIOS!!!  
+  
+  
+***  
+
+### Entry: January 5th, 2023
+
+#### General information:
+__Date__: 05-01-2023  
+__Author__: Cara A. Gallagher  
+__Trace tag__: Model output verification             
+__Keyword__: Calibration                
+__Title__: Density check         
+__Overview__: Select final resource parameter values and check density                              
+__Files__:  
+* ~/EBIVRProject/Scripts/Output scripts/EBIV_population_verification.R  
+* ~/EBIVRProject/Scripts/Calibration scripts/EBIV_calibration_pattern_prep.R  
+* ~/EBIVABM/EBIVModelDensTest.nlogo   
+
+
+#### Specific details:  
+* With 500m patch side length, the number of voles needed to resemble realistic habitat densities would be beyond computation feasibility  
+* To make the number of voles more manageable the size of each cell must be reduced, however when this is done animals are able to traverse the entire landscape within a timestep leading to differences in spatial configuration no longer mattering and full population collapses occurring at the end of the breeding season  
+  * Cell size was reduced to 10 m and the number of cells increased to 50 x 50
+* To maintain spatial heterogeneity and local competition a simple home range model was implemented as a biased CRW 
+* To keep space use roughly consistent with empirical records of vole home range size, movements were broken up into minute (30) steps versus the three steps that were implemented previously 
+* Each animal was equipped with a list to keep track of which patches it visited in a timestep  
+  * Then in the energy intake procedure animals attempt to consume food from each patch visited relative to the amount of encounters of that patch   
+  * This allows animals to break up their ingested energy between several cells, rather than just the last cell they encounter   
+* Gathered data to finalize range of empirical home range radii (assuming circular home ranges) of 11.3 - 32.2 m  
+* Running check in year 5 with all voles reporting distance to home range core once every 10 days   
+  * Using parameter set from row 20   
+* Have decided to give up on including these detailed movements in favor of having animals instead pick a number of random patches within the range of home range radii of their home range core and feeding on those patches   
+* The other way was too slow and probably too detailed to include in an ecoevo model…   
+* Important to note that at high maximum resources (~100) and low replenishment rates (~0.0075) that a two-year population cycle occurs, but this is fairly unstable and can occur in collapse (these two-year cycles are also present in the literature)   
+  * https://doi.org/10.1186/s12898-019-0222-3  
+  * https://doi.org/10.1038/srep21323  
+* Tested a range of parameter values:  
+  * max-resources-base:   from: 40     to: 200    by: 20       
+  * r-growth-ts:          from: 0.005  to: 0.025  by: 0.002   
+* Ran 25 simulations per parameter combination, 10 years of simulations, first 5 years discarded as burn-in  
+* Based on minimization from the median value of 14.2 female voles per hectare from the literature values, the best combination was a max-resources-base of 140 and a r-growth-ts value of 0.011   
+
+
+
+***  
+
+### Entry: January 5th, 2023
+
+#### General information:
+__Date__: 05-01-2023  
+__Author__: Cara A. Gallagher  
+__Trace tag__: Model output verification             
+__Keyword__: Calibration                
+__Title__: Calibration pattern recheck         
+__Overview__: Checking calibration patterns after density check                                
+__Files__:  
+* ~/EBIVRProject/Scripts/Calibration scripts/EBIV_calibration_pattern_prep.R  
+* ~/EBIVABM/EBIVModelDensTest.nlogo   
+
+
+#### Specific details:  
+* Using the parameter values from the previous entry, started runs to check the outputs from the 16 calibration patterns on the cluster   
+
+***  
+
+
+### Entry: January 30th, 2023
+
+#### General information:
+__Date__: 30-01-2023  
+__Author__: Cara A. Gallagher  
+__Trace tag__: Model output verification             
+__Keyword__: Calibration                
+__Title__: Calibration final         
+__Overview__: Final calibration outputs                                  
+__Files__:  
+* ~/EBIVRProject/Scripts/Calibration scripts/EBIV_calibration_pattern_prep.R  
+* ~/EBIVRProject/Scripts/Calibration scripts/ABC_output_results.R  
+* ~/EBIVRProject/Scripts/Calibration scripts/ABC_parameter_plots.R  
+* ~/EBIVABM/EBIVModel.nlogo   
+
+
+#### Specific details:  
+* Finished running and analyzing calibration results post density check   
+* Took some narrowing in, but final outputs look comparable to previous fits  
+* Decided to opt for 30 selected combos rather than 50 (following Vicky's work)  
+* Doing final cleanup and then will move on to next steps (evaluation, sensitivity analysis, scenarios)!!  
+
+
+
+***  
+
+
+### Entry: February 3rd, 2023
+
+#### General information:
+__Date__: 03-02-2023  
+__Author__: Cara A. Gallagher  
+__Trace tag__: Model output corroboration             
+__Keyword__: Output corroboration                
+__Title__: Model evaluation         
+__Overview__: Evaluation against empirical patterns                                  
+__Files__:  
+* ~/EBIVRProject/Scripts/Evaluation/EBIV_evaluation_patterns.R  
+* ~/EBIVRProject/Data/Evaluation/EvaluationOutputs.csv   
+* ~/EBIVABM/EBIVModel.nlogo   
+
+
+#### Specific details:  
+* Used the parameter set ID'd in the calibration step  
+* Ran 150 sims (5 reps per parameter combo), for 6 years with most patterns collected in only year 5 but survival continuing through year 6   
+* Compared outputs visually to all patterns   
+* Sensitivity analysis next!!    
+
+
+
+***  
+
+
+### Entry: March 6th, 2023
+
+#### General information:
+__Date__: 06-03-2023  
+__Author__: Cara A. Gallagher  
+__Trace tag__: Model analysis and application             
+__Keyword__: Sensitivity analysis  
+__Title__: Model sensitivity analysis         
+__Overview__: Assessing sensitivity of model to input parameters                                    
+__Files__:  
+* ~/EBIVRProject/Scripts/Sensitivity analysis scripts/  
+* ~/EBIVRProject/Data/Sensitivity analysis/   
+* ~/EBIVABM/EBIVModel.nlogo   
+
+
+#### Specific details:  
+* Decided to do a two stage SA with first a Morris screening, then Sobol analysis   
+* For both stages of the sensitivity analysis, used a subset of metrics to focus on based on the PanTHERIA database metrics: Adult body mass, Weaning body mass, Neonate body mass, Age at first litter, Litters per year, Litter size at birth, Population density  
+* For Morris screening, all 60 parameters were screened with 50 elementary effects selected, so 50 × (60 + 1) = 3050 total runs   
+* For Sobol, 10 most influential parameters were focused on (based on sum of morris screening outputs for all 7 metrics) and a LHS sampling matrix of 500 was selected, so 500 × (10 + 2) = 6000 total runs   
+* Outputs and influential parameters were added to the TRACE document   
+* Still not super happy with outputs for the non-body mass related output metrics (were not influenced much by really any of the ID'd parameters), but will circle back to this  
+
+
+***  
+
+
+### Entry: March 17th, 2023
+
+#### General information:
+__Date__: 17-03-2023  
+__Author__: Cara A. Gallagher  
+__Trace tag__: Implementation verification           
+__Keyword__: Software verification/Testing  
+__Title__: Verification outputs for TRACE           
+__Overview__: Verification checks for TRACE Implementation verification section                                      
+__Files__:  
+* ~/EBIVRProject/Scripts/Verification scripts/EBIV_storage_verification.R  
+* ~/EBIVRProject/Scripts/Verification scripts/EBIV_COT_verification.R  
+* ~/EBIVRProject/Scripts/Verification scripts/EBIV_growth_verification.R  
+* ~/EBIVRProject/Scripts/Verification scripts/EBIV_cohort_follow.R  
+* ~/EBIVABM/EBIVModel.nlogo   
+
+
+#### Specific details:  
+* Followed a suite of output metrics to verify model components. Most of these had been done previously but here a final run was done.  
+* Details can be found in TRACE  
+* Realized that maximum stomach capacities in the model for lactating animals are way high.   
+  * Not sure what to do about this though as so much of the literature focuses on a lack of support for the hypothesis that rodents are limited in lactation by the alimentary capacity   
+  * Ran tests and there is some slight smoothing of population abundance when introducing a cap at 20% of body mass, but overall doesn’t seem to influence densities too much   
+  * Will have to leave for now regardless as any changes would require full recalibration and evaluation - but is something to think about   
+  * Additionally it still appears that actual ingestion rates do not often exceed reasonable levels (which are hard to assess since relevant data are not available)  
+
+
+***  
+
+
+### Entry: April 26th, 2023
+
+#### General information:
+__Date__: 26-04-2023  
+__Author__: Cara A. Gallagher  
+__Trace tag__: Model analysis and application             
+__Keyword__: Sensitivity analysis    
+__Title__: Double checking SA             
+__Overview__: Double checking that sensitivity analysis results are correct                                        
+__Files__:  
+* ~/EBIVRProject/Scripts/Sensitivity scripts/SA_morris_outs.R  
+* ~/EBIVRProject/Scripts/Sensitivity scripts/SA_sobol_params.R  
+* ~/EBIVRProject/Scripts/Sensitivity scripts/SA_sobol_outs.R  
+
+#### Specific details: 
+* Felt that sensitivity analysis results were unclear so decided to re do   
+* Ran for 3 years rather than 5 as many parameter combinations resulted in runs in which the population crashes before reaching the output year   
+  * This kept results from being equivalent if e.g. the run crashed in year 2 versus year 4   
+* These runs resulted in a different set of parameters being selected as the top 10 most influential and revealed that one parameter, DE-fat, was by far the most influential parameter in the model   
+* The second sobol analysis was able to clearly define the indirect and direct effects of each of the top parameters on each of the selected model outputs   
+* The results were fully detailed in the associated TRACE document   
+
+***  
+
+### Entry: November 29th, 2023
+
+#### General information:
+__Date__: 29.11.2023    
+__Author__: Cara A. Gallagher  
+__Trace tag__:  Model analysis and application        
+__Keyword__: Model application          
+__Title__: NDVI and EVI values for scenarios    
+__Overview__: Pulled NDVI and EVI from MODIS data for scenarios    
+__Files__:  
+* ~/EBIVRProject/Scripts/Scenario input scripts/MODIS_NDVI.R    
+* ~/EBIVRProject/Data/Scenarios/NDVIdata.csv     
+* ~/EBIVRProject/Data/Scenarios/EVIdata.csv     
+
+  
+#### Specific details:  
+* Pulled data from MODIS using MODIStools  
+* Extracted data from plus and minus 1 km EW and NW around the coordinate of each site  
+* Exported for each metric (NDVI & EVI) as CSV  
+* Can just keep EVI and NDVI for now, think about which forms a tighter fit with the abiotic data   
+  * For both, settled on minimum value of -0.1 - as anything less could be attributed to water or atmospheric effects  
+* Next step: Pull abiotic variables and fit relationships  
+
+
+***  
+
+### Entry: Jan 5th, 2024
+
+#### General information:
+__Date__: 05.01.2024    
+__Author__: Cara A. Gallagher  
+__Trace tag__:  Model analysis and application        
+__Keyword__: Model application          
+__Title__: GCM data for scenarios    
+__Overview__: Pulled GCM data from Copernicus data store for scenarios    
+__Files__:  
+* ~/EBIVRProject/Scripts/Scenario input scripts/Copernicus_GCM_data.R    
+
+  
+#### Specific details:  
+* Downloaded data from Copernicus data store for:  
+  * Extent covered (lat/long): xmin: -11.4, xmax: 31.28333, ymin: 34.35, ymax: 73   
+  * Variables: pr, tasmin, rsdt   
+  * Experiments: Historical, ssp245, & ssp585   
+  * Years 2000 - 2014 & 2015 - 2100   
+  * Models: CNRM-CM6-1-HR, GFDL-ESM4, & HadGEM3-GC31-LL   
+* Models were selected as those which were found to have:   
+  * a maximum of 1 unsatisfactory finding for performance for temperature and precipitation   outputs in Palmer et al. 2023 - 10.5194/esd-14-457-2023  
+  * a high resolution of 100 km land cover  
+  * available outputs for all combinations of factors above  
+* Model DOIs:  
+  * CNRM-CM6-1-HR - doi:10.22033/ESGF/CMIP6.1387  
+  * GFDL-ESM4 - 10.22033/ESGF/CMIP6.1407  
+  * HadGEM3-GC31-LL - doi:10.22033/ESGF/CMIP6.1901  
+* These were downloaded and site values determined for each point   
+  
+
+
+
+***  
+
+### Entry: Jan 9th, 2024
+
+#### General information:
+__Date__: 09.01.2024    
+__Author__: Cara A. Gallagher  
+__Trace tag__:  Model analysis and application        
+__Keyword__: Model application          
+__Title__: Combining GCM and VI data    
+__Overview__: Combining datasets from GCM and VI data for generating projections    
+__Files__:  
+* ~/EBIVRProject/Scripts/Scenario input scripts/VI_projections.R    
+* ~/EBIVRProject/Data/Scenarios/NDVIdata.csv     
+* ~/EBIVRProject/Data/Scenarios/EVIdata.csv    
+* ~/EBIVRProject/Data/Scenarios/GCMdata.csv     
+
+#### Specific details:  
+* Brought in EVI, NDVI, and GCM datasets into a single script  
+* Processed data so that the datasets can be combined  
+  * For EVI and NDVI data this required:  
+    * Taking the mean of values for all cells per date & site (2 x 2km area with 250m cells)  
+    * Multiplying the VI value by 0.0001 (per MODIS)  
+    * Taking the floor of the date so that values could be compared per month  
+  * For GCM data this required:  
+    * Selecting the relevant columns (date, site, variable, model, experiment, value)  
+    * Taking the floor of the date so that values could be compared per month  
+    * Moving variables into their own columns  
+* These were then combined into a single tibble for each VI and basic comparisons made 
+* Correlations seem to exist but are highly non-linear  
+* Will try to meet with Vik to discuss best plan of action to fit relationships for generating projections  
+  
+
+***  
+
+### Entry: Mar 8th, 2024
+
+#### General information:
+__Date__: 08.03.2024    
+__Author__: Cara A. Gallagher  
+__Trace tag__:  Model analysis and application        
+__Keyword__: Model application          
+__Title__: Scenario outputs     
+__Overview__: Final scenario settings and outputs     
+__Files__:  
+* ~/EBIVRProject/Scripts/Scenario output scripts/NDVIoutputScripts.R    
+  
+
+#### Specific details:  
+* Added 1 month of variation in start date for the mating season as initial results were really synchronized  
+  * 1 month based on Eccard and Ylönen 2001 (DOI: 10.1139/cjz-79-10-1743)  
+* Decided to stop collecting FMR and IR as large output files and no differences seen in runs 
+* Added lifetime reproductive success and age as mortality as two new inputs 
+* Updated these outputs to be collected in the year prior to and the last year of the projected period  
+* Running on cluster now  
+
+
+
+***  
+
+### Entry: Mar 8th, 2024
+
+#### General information:
+__Date__: 15.05.2024    
+__Author__: Cara A. Gallagher  
+__Trace tag__:  Model analysis and application        
+__Keyword__: Model application          
+__Title__: Scenario outputs     
+__Overview__: Hopefully actually final scenario outputs     
+__Files__:  
+* ~/EBIVRProject/Scripts/Scenario output scripts/NDVIoutputScripts_PCA.R    
+* ~/EBIVRProject/Scripts/Scenario input scripts/VI_projections_p_site_shiftedIA.R    
+
+
+#### Specific details:  
+* THe consistency in within year variation across sites in the projected have heavily influenced results  
+* Realized that precipitation even in the historical data varies widely between models  
+* Will try E-OBS meteorological data to get better historical precipitation and temperature values and see how these influence things  
+  * https://cds.climate.copernicus.eu/cdsapp#!/dataset/insitu-gridded-observations-europe?tab=overview   
+* If this isn't better I will instead try to just shift the within year dynamics to the average value from the projections (with year pulled at random)  
+* Then if THAT doesn't work, I will just omit the projections on trait values  
+
+***  
