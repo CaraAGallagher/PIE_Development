@@ -1,0 +1,523 @@
+---
+title: "NDVI projection results"
+author: "Cara Gallagher"
+date: "2024-01-17"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+</br>   
+
+So I tried a few different model formulations based on our chat the other day and came up with two options.   
+
+*** 
+
+Model 1: 
+
+```{r, message=FALSE, eval=FALSE}
+model1 <- lmer(meanNDVI ~ pr + pr^2 + rsdt + tasmin + tasmin^2 + (pr | site) + (tasmin | site) + (1 | year), 
+                      data = NDVI_GCM_dat_scaled, 
+                      REML = FALSE, 
+                      control = lmerControl(optimizer = "bobyqa"))
+```
+This required another optimizer (bobyqa) to converge and I set REML to FALSE because I was getting the error "boundary (singular) fit".
+
+Output details for this model: 
+```{r, message=FALSE, echo=FALSE, warning=FALSE}
+setwd("../EBIVRProject/")
+sys.source("./Scripts/Scenario input scripts/VI_projections.R", envir = knitr::knit_global())
+summary(model1)
+```
+
+*** 
+
+The second model is just a simpler version, without the polynomials: 
+
+Model 2: 
+
+```{r, message=FALSE, eval=FALSE}
+model2 <- lmer(meanNDVI ~ pr + rsdt + tasmin + (1 | site) + (1 | year), data = NDVI_GCM_dat_scaled)
+```
+
+Output details for this model: 
+```{r, message=FALSE, echo=FALSE, warning=FALSE}
+setwd("../EBIVRProject/")
+sys.source("./Scripts/Scenario input scripts/VI_projections.R", envir = knitr::knit_global())
+summary(model2)
+```
+
+*** 
+
+I thought it could be nice to compare the last 10 years of the empirical NDVI data (as colored points) to the first 10 years of data from the projections (grey violins) to get an idea if these make sense. Both overall seem to fit the data much nicer than the original super basic model I was using, though "Model 1" seems to fit the variability in the higher latitude sites a bit better, but is worse at some of the intermediate sites (like Havelaue).   
+</br>   
+Model 1:  
+```{r, message=FALSE, echo=FALSE, warning=FALSE, fig.width=10, fig.height=11}
+setwd("../EBIVRProject/")
+sys.source("./Scripts/Scenario input scripts/VI_projections.R", envir = knitr::knit_global())
+
+GCMdatFuture <- read_csv("Data/Scenarios/GCMdata.csv")
+
+GCMdatFuture <- GCMdatFuture %>% 
+  filter(date >= max(NDVIdat$VI_date)) %>% 
+  dplyr::select(date, site, variable, model, experiment, value) %>% 
+  mutate(floor_date = floor_date(date, "month")) %>% 
+  rename(GCM_date = date) %>% 
+  pivot_wider(names_from = "variable", values_from = "value") %>% 
+  mutate(pr = (pr - mean_pr)/sd_pr,
+         rsdt = (rsdt - mean_rsdt)/sd_rsdt,
+         tasmin = (tasmin - mean_tasmin)/sd_tasmin,
+         year = year(GCM_date))
+
+predNDVI<- predict(model1, newdata = GCMdatFuture, allow.new.levels = TRUE)
+
+GCMdatFuture <- GCMdatFuture %>% 
+  mutate(predNDVI = predNDVI)
+
+GCMdatFuture <- GCMdatFuture %>% 
+  mutate(predNDVI = ifelse(predNDVI < 0, 0, ifelse(predNDVI > 1, 1, predNDVI)))
+
+GCMdatFuture <- GCMdatFuture %>% 
+  mutate(
+    site = fct_relevel(
+      site,
+      "Pallasjarvi",
+      "Stroemsund",
+      "Konnovesi",
+      "Evenstad",
+      "Havelaue",
+      "Bielowieza",
+      "Frýdek-Místek",
+      "Le Quartier",
+      "Asturias",
+      "Calabria"
+    )
+  )
+NDVIdat <- NDVIdat %>% 
+  mutate(
+    site = fct_relevel(
+      site,
+      "Pallasjarvi",
+      "Stroemsund",
+      "Konnovesi",
+      "Evenstad",
+      "Havelaue",
+      "Bielowieza",
+      "Frýdek-Místek",
+      "Le Quartier",
+      "Asturias",
+      "Calabria"
+    )
+  )
+
+#### visualize projection results #### 
+# comparing outputs for first 10 years of projections and last 10 of data
+ggplot() +
+  geom_violin(data = subset(GCMdatFuture, year(GCM_date) <= 2032), aes(x = as.factor(month(GCM_date)), y = predNDVI), fill = "grey50", col = "grey50", alpha = 0.5) +
+  geom_jitter(data = subset(NDVIdat, year(VI_date) >= 2012), aes(x = month(VI_date), y = meanNDVI, col = site), size = 1.1, width = 0.25) +
+  facet_grid(rows = vars(site), scales = "fixed") +
+  ylim(-0.1,1) +
+  theme_bw() +
+  labs(x = "Month", y = "NDVI") +
+  scale_color_manual(values = pal(10)) +
+  theme(text = element_text(size = 30, color = "grey30", family = "Montserrat"),
+        legend.position = "none")
+```
+
+Model 2: 
+
+```{r, message=FALSE, echo=FALSE, warning=FALSE, fig.width=10, fig.height=11}
+setwd("../EBIVRProject/")
+sys.source("./Scripts/Scenario input scripts/VI_projections.R", envir = knitr::knit_global())
+
+GCMdatFuture <- read_csv("Data/Scenarios/GCMdata.csv")
+
+GCMdatFuture <- GCMdatFuture %>% 
+  filter(date >= max(NDVIdat$VI_date)) %>% 
+  dplyr::select(date, site, variable, model, experiment, value) %>% 
+  mutate(floor_date = floor_date(date, "month")) %>% 
+  rename(GCM_date = date) %>% 
+  pivot_wider(names_from = "variable", values_from = "value") %>% 
+  mutate(pr = (pr - mean_pr)/sd_pr,
+         rsdt = (rsdt - mean_rsdt)/sd_rsdt,
+         tasmin = (tasmin - mean_tasmin)/sd_tasmin,
+         year = year(GCM_date))
+
+predNDVI<- predict(model2, newdata = GCMdatFuture, allow.new.levels = TRUE)
+
+GCMdatFuture <- GCMdatFuture %>% 
+  mutate(predNDVI = predNDVI)
+
+GCMdatFuture <- GCMdatFuture %>% 
+  mutate(predNDVI = ifelse(predNDVI < 0, 0, ifelse(predNDVI > 1, 1, predNDVI)))
+
+GCMdatFuture <- GCMdatFuture %>% 
+  mutate(
+    site = fct_relevel(
+      site,
+      "Pallasjarvi",
+      "Stroemsund",
+      "Konnovesi",
+      "Evenstad",
+      "Havelaue",
+      "Bielowieza",
+      "Frýdek-Místek",
+      "Le Quartier",
+      "Asturias",
+      "Calabria"
+    )
+  )
+NDVIdat <- NDVIdat %>% 
+  mutate(
+    site = fct_relevel(
+      site,
+      "Pallasjarvi",
+      "Stroemsund",
+      "Konnovesi",
+      "Evenstad",
+      "Havelaue",
+      "Bielowieza",
+      "Frýdek-Místek",
+      "Le Quartier",
+      "Asturias",
+      "Calabria"
+    )
+  )
+
+#### visualize projection results #### 
+# comparing outputs for first 10 years of projections and last 10 of data
+ggplot() +
+  geom_violin(data = subset(GCMdatFuture, year(GCM_date) <= 2032), aes(x = as.factor(month(GCM_date)), y = predNDVI), fill = "grey50", col = "grey50", alpha = 0.5) +
+  geom_jitter(data = subset(NDVIdat, year(VI_date) >= 2012), aes(x = month(VI_date), y = meanNDVI, col = site), size = 1.1, width = 0.25) +
+  facet_grid(rows = vars(site), scales = "fixed") +
+  ylim(-0.1,1) +
+  theme_bw() +
+  labs(x = "Month", y = "NDVI") +
+  scale_color_manual(values = pal(10)) +
+  theme(text = element_text(size = 30, color = "grey30", family = "Montserrat"),
+        legend.position = "none")
+```
+
+*** 
+
+When looking at the outputs for the whole projection period, both predict overall increases in NDVI.   
+</br>   
+Model 1:  
+```{r, message=FALSE, echo=FALSE, warning=FALSE}
+setwd("../EBIVRProject/")
+sys.source("./Scripts/Scenario input scripts/VI_projections.R", envir = knitr::knit_global())
+
+GCMdatFuture <- read_csv("Data/Scenarios/GCMdata.csv")
+
+GCMdatFuture <- GCMdatFuture %>% 
+  filter(date >= max(NDVIdat$VI_date)) %>% 
+  dplyr::select(date, site, variable, model, experiment, value) %>% 
+  mutate(floor_date = floor_date(date, "month")) %>% 
+  rename(GCM_date = date) %>% 
+  pivot_wider(names_from = "variable", values_from = "value") %>% 
+  mutate(pr = (pr - mean_pr)/sd_pr,
+         rsdt = (rsdt - mean_rsdt)/sd_rsdt,
+         tasmin = (tasmin - mean_tasmin)/sd_tasmin,
+         year = year(GCM_date))
+
+predNDVI<- predict(model1, newdata = GCMdatFuture, allow.new.levels = TRUE)
+
+GCMdatFuture <- GCMdatFuture %>% 
+  mutate(predNDVI = predNDVI)
+
+GCMdatFuture <- GCMdatFuture %>% 
+  mutate(predNDVI = ifelse(predNDVI < 0, 0, ifelse(predNDVI > 1, 1, predNDVI)))
+
+GCMdatFuture <- GCMdatFuture %>% 
+  mutate(
+    site = fct_relevel(
+      site,
+      "Pallasjarvi",
+      "Stroemsund",
+      "Konnovesi",
+      "Evenstad",
+      "Havelaue",
+      "Bielowieza",
+      "Frýdek-Místek",
+      "Le Quartier",
+      "Asturias",
+      "Calabria"
+    )
+  )
+NDVIdat <- NDVIdat %>% 
+  mutate(
+    site = fct_relevel(
+      site,
+      "Pallasjarvi",
+      "Stroemsund",
+      "Konnovesi",
+      "Evenstad",
+      "Havelaue",
+      "Bielowieza",
+      "Frýdek-Místek",
+      "Le Quartier",
+      "Asturias",
+      "Calabria"
+    )
+  )
+
+#### visualize projection results #### 
+
+ggplot(GCMdatFuture, aes(x = GCM_date, y = predNDVI, col = site)) +
+  geom_line(alpha = 0.5) +
+  geom_smooth(se = FALSE, linewidth = 1) +
+  facet_grid(rows = vars(experiment), scales = "fixed") +
+  theme_bw() +
+  scale_color_manual(values = pal(10)) +
+  theme(text = element_text(size = 30, color = "grey30", family = "Montserrat"))
+```
+
+Model 2:   
+```{r, message=FALSE, echo=FALSE, warning=FALSE}
+setwd("../EBIVRProject/")
+sys.source("./Scripts/Scenario input scripts/VI_projections.R", envir = knitr::knit_global())
+
+GCMdatFuture <- read_csv("Data/Scenarios/GCMdata.csv")
+
+GCMdatFuture <- GCMdatFuture %>% 
+  filter(date >= max(NDVIdat$VI_date)) %>% 
+  dplyr::select(date, site, variable, model, experiment, value) %>% 
+  mutate(floor_date = floor_date(date, "month")) %>% 
+  rename(GCM_date = date) %>% 
+  pivot_wider(names_from = "variable", values_from = "value") %>% 
+  mutate(pr = (pr - mean_pr)/sd_pr,
+         rsdt = (rsdt - mean_rsdt)/sd_rsdt,
+         tasmin = (tasmin - mean_tasmin)/sd_tasmin,
+         year = year(GCM_date))
+
+predNDVI<- predict(model2, newdata = GCMdatFuture, allow.new.levels = TRUE)
+
+GCMdatFuture <- GCMdatFuture %>% 
+  mutate(predNDVI = predNDVI)
+
+GCMdatFuture <- GCMdatFuture %>% 
+  mutate(predNDVI = ifelse(predNDVI < 0, 0, ifelse(predNDVI > 1, 1, predNDVI)))
+
+GCMdatFuture <- GCMdatFuture %>% 
+  mutate(
+    site = fct_relevel(
+      site,
+      "Pallasjarvi",
+      "Stroemsund",
+      "Konnovesi",
+      "Evenstad",
+      "Havelaue",
+      "Bielowieza",
+      "Frýdek-Místek",
+      "Le Quartier",
+      "Asturias",
+      "Calabria"
+    )
+  )
+NDVIdat <- NDVIdat %>% 
+  mutate(
+    site = fct_relevel(
+      site,
+      "Pallasjarvi",
+      "Stroemsund",
+      "Konnovesi",
+      "Evenstad",
+      "Havelaue",
+      "Bielowieza",
+      "Frýdek-Místek",
+      "Le Quartier",
+      "Asturias",
+      "Calabria"
+    )
+  )
+
+#### visualize projection results #### 
+
+ggplot(GCMdatFuture, aes(x = GCM_date, y = predNDVI, col = site)) +
+  geom_line(alpha = 0.5) +
+  geom_smooth(se = FALSE, linewidth = 1) +
+  facet_grid(rows = vars(experiment), scales = "fixed") +
+  theme_bw() +
+  scale_color_manual(values = pal(10)) +
+  theme(text = element_text(size = 30, color = "grey30", family = "Montserrat"))
+```
+
+***  
+
+But when filtering the data to look at specific months, it seems like some interesting things are going on in Model 1 with sites getting more similar under the higher climate change emissions scenario in July and increases primarily occurring in northern sites in January.    
+</br>  
+Model 1: 
+   
+```{r, message=FALSE, echo=FALSE, warning=FALSE}
+setwd("../EBIVRProject/")
+sys.source("./Scripts/Scenario input scripts/VI_projections.R", envir = knitr::knit_global())
+
+GCMdatFuture <- read_csv("Data/Scenarios/GCMdata.csv")
+
+GCMdatFuture <- GCMdatFuture %>% 
+  filter(date >= max(NDVIdat$VI_date)) %>% 
+  dplyr::select(date, site, variable, model, experiment, value) %>% 
+  mutate(floor_date = floor_date(date, "month")) %>% 
+  rename(GCM_date = date) %>% 
+  pivot_wider(names_from = "variable", values_from = "value") %>% 
+  mutate(pr = (pr - mean_pr)/sd_pr,
+         rsdt = (rsdt - mean_rsdt)/sd_rsdt,
+         tasmin = (tasmin - mean_tasmin)/sd_tasmin,
+         year = year(GCM_date))
+
+predNDVI<- predict(model1, newdata = GCMdatFuture, allow.new.levels = TRUE)
+
+GCMdatFuture <- GCMdatFuture %>% 
+  mutate(predNDVI = predNDVI)
+
+GCMdatFuture <- GCMdatFuture %>% 
+  mutate(predNDVI = ifelse(predNDVI < 0, 0, ifelse(predNDVI > 1, 1, predNDVI)))
+
+GCMdatFuture <- GCMdatFuture %>% 
+  mutate(
+    site = fct_relevel(
+      site,
+      "Pallasjarvi",
+      "Stroemsund",
+      "Konnovesi",
+      "Evenstad",
+      "Havelaue",
+      "Bielowieza",
+      "Frýdek-Místek",
+      "Le Quartier",
+      "Asturias",
+      "Calabria"
+    )
+  )
+NDVIdat <- NDVIdat %>% 
+  mutate(
+    site = fct_relevel(
+      site,
+      "Pallasjarvi",
+      "Stroemsund",
+      "Konnovesi",
+      "Evenstad",
+      "Havelaue",
+      "Bielowieza",
+      "Frýdek-Místek",
+      "Le Quartier",
+      "Asturias",
+      "Calabria"
+    )
+  )
+
+#### visualize projection results #### 
+
+
+ggplot(subset(GCMdatFuture, month(GCM_date) == 7), aes(x = GCM_date, y = predNDVI, col = site)) +
+  geom_line(alpha = 0.5) +
+  geom_smooth(se = FALSE, linewidth = 1) +
+  facet_grid(rows = vars(experiment), scales = "fixed") +
+  theme_bw() +
+  ggtitle("July") +
+  scale_color_manual(values = pal(10)) +
+  theme(text = element_text(size = 30, color = "grey30", family = "Montserrat"))
+
+ggplot(subset(GCMdatFuture, month(GCM_date) == 1), aes(x = GCM_date, y = predNDVI, col = site)) +
+  geom_line(alpha = 0.5) +
+  geom_smooth(se = FALSE, linewidth = 1) +
+  facet_grid(rows = vars(experiment), scales = "fixed") +
+  theme_bw() +
+    ggtitle("January") +
+  scale_color_manual(values = pal(10)) +
+  theme(text = element_text(size = 30, color = "grey30", family = "Montserrat"))
+
+```
+
+While in model 2, it looks like all sites increase under both emissions scenarios and months. 
+</br>  
+Model 2:  
+
+
+```{r, message=FALSE, echo=FALSE, warning=FALSE}
+setwd("../EBIVRProject/")
+sys.source("./Scripts/Scenario input scripts/VI_projections.R", envir = knitr::knit_global())
+
+GCMdatFuture <- read_csv("Data/Scenarios/GCMdata.csv")
+
+GCMdatFuture <- GCMdatFuture %>% 
+  filter(date >= max(NDVIdat$VI_date)) %>% 
+  dplyr::select(date, site, variable, model, experiment, value) %>% 
+  mutate(floor_date = floor_date(date, "month")) %>% 
+  rename(GCM_date = date) %>% 
+  pivot_wider(names_from = "variable", values_from = "value") %>% 
+  mutate(pr = (pr - mean_pr)/sd_pr,
+         rsdt = (rsdt - mean_rsdt)/sd_rsdt,
+         tasmin = (tasmin - mean_tasmin)/sd_tasmin,
+         year = year(GCM_date))
+
+predNDVI<- predict(model2, newdata = GCMdatFuture, allow.new.levels = TRUE)
+
+GCMdatFuture <- GCMdatFuture %>% 
+  mutate(predNDVI = predNDVI)
+
+GCMdatFuture <- GCMdatFuture %>% 
+  mutate(predNDVI = ifelse(predNDVI < 0, 0, ifelse(predNDVI > 1, 1, predNDVI)))
+
+GCMdatFuture <- GCMdatFuture %>% 
+  mutate(
+    site = fct_relevel(
+      site,
+      "Pallasjarvi",
+      "Stroemsund",
+      "Konnovesi",
+      "Evenstad",
+      "Havelaue",
+      "Bielowieza",
+      "Frýdek-Místek",
+      "Le Quartier",
+      "Asturias",
+      "Calabria"
+    )
+  )
+NDVIdat <- NDVIdat %>% 
+  mutate(
+    site = fct_relevel(
+      site,
+      "Pallasjarvi",
+      "Stroemsund",
+      "Konnovesi",
+      "Evenstad",
+      "Havelaue",
+      "Bielowieza",
+      "Frýdek-Místek",
+      "Le Quartier",
+      "Asturias",
+      "Calabria"
+    )
+  )
+
+#### visualize projection results #### 
+
+
+ggplot(subset(GCMdatFuture, month(GCM_date) == 7), aes(x = GCM_date, y = predNDVI, col = site)) +
+  geom_line(alpha = 0.5) +
+  geom_smooth(se = FALSE, linewidth = 1) +
+  facet_grid(rows = vars(experiment), scales = "fixed") +
+  theme_bw() +
+  ggtitle("July") +
+  scale_color_manual(values = pal(10)) +
+  theme(text = element_text(size = 30, color = "grey30", family = "Montserrat"))
+
+ggplot(subset(GCMdatFuture, month(GCM_date) == 1), aes(x = GCM_date, y = predNDVI, col = site)) +
+  geom_line(alpha = 0.5) +
+  geom_smooth(se = FALSE, linewidth = 1) +
+  facet_grid(rows = vars(experiment), scales = "fixed") +
+  theme_bw() +
+    ggtitle("January") +
+  scale_color_manual(values = pal(10)) +
+  theme(text = element_text(size = 30, color = "grey30", family = "Montserrat"))
+
+```
+
+
+
+

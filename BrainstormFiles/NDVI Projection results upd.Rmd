@@ -1,0 +1,224 @@
+---
+title: "NDVI projection results"
+author: "Cara Gallagher"
+date: "2024-01-26"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+</br>   
+
+Testing drought indices Standardized Precipitation Evapotranspiration Index (SPEI) & Standardized Precipitation Index (SPI). The best performing model (via conditional R^2) of these new additions included SPI. Here are the two previous models (one simple, one more complex) and the model including SPI. 
+
+*** 
+
+Model 1: 
+
+```{r, message=FALSE, eval=FALSE}
+model1 <- lmer(meanNDVI ~ pr + rsds + tasmin + (1 | site) + (1 | year), data = NDVI_GCM_dat_scaled)
+```
+
+Output details for this model: 
+```{r, message=FALSE, echo=FALSE, warning=FALSE}
+setwd("../EBIVRProject/")
+sys.source("./Scripts/Scenario input scripts/VI_projections_SPItest.R", envir = knitr::knit_global())
+tab_model(modelSimple)
+```
+
+*** 
+
+The second model is the more complex version including polynomials: 
+
+Model 2: 
+
+```{r, message=FALSE, eval=FALSE}
+modelOrg <- lmer(meanNDVI ~ pr + pr^2 + rsds + tasmin + tasmin^2 + (pr | site) + (tasmin | site) + (1 | year), 
+               data = NDVI_GCM_dat_scaled, 
+               REML = FALSE, 
+               control = lmerControl(optimizer = "bobyqa"))
+```
+
+Output details for this model: 
+```{r, message=FALSE, echo=FALSE, warning=FALSE}
+setwd("../EBIVRProject/")
+sys.source("./Scripts/Scenario input scripts/VI_projections_SPItest.R", envir = knitr::knit_global())
+tab_model(modelOrg)
+```
+
+*** 
+
+
+Now the new model including spi. 
+
+Model 3: 
+
+```{r, message=FALSE, eval=FALSE}
+modelSPI <- lmer(meanNDVI ~ pr + pr^2 + tasmin + tasmin^2 + rsds + spi + (pr | site) + (tasmin | site) + (1 | year), 
+               data = NDVI_GCM_dat_scaled, 
+               REML = FALSE, 
+               control = lmerControl(optimizer = "bobyqa"))
+```
+
+Output details for this model: 
+```{r, message=FALSE, echo=FALSE, warning=FALSE}
+setwd("../EBIVRProject/")
+sys.source("./Scripts/Scenario input scripts/VI_projections_SPItest.R", envir = knitr::knit_global())
+tab_model(modelSPI)
+```
+
+*** 
+
+
+When comparing the outputs by month, the three models look pretty similar (grey points are NDVI from the satellite and colored boxplot, the model outputs). 
+
+</br>   
+Model 1:  
+```{r, message=FALSE, echo=FALSE, warning=FALSE, fig.width=10, fig.height=11}
+setwd("../EBIVRProject/")
+sys.source("./Scripts/Scenario input scripts/VI_projections_SPItest.R", envir = knitr::knit_global())
+
+p1Simple
+
+```
+
+Model 2: 
+```{r, message=FALSE, echo=FALSE, warning=FALSE, fig.width=10, fig.height=11}
+setwd("../EBIVRProject/")
+sys.source("./Scripts/Scenario input scripts/VI_projections_SPItest.R", envir = knitr::knit_global())
+
+p1Org
+```
+
+Model 3: 
+```{r, message=FALSE, echo=FALSE, warning=FALSE, fig.width=10, fig.height=11}
+setwd("../EBIVRProject/")
+sys.source("./Scripts/Scenario input scripts/VI_projections_SPItest.R", envir = knitr::knit_global())
+
+p1SPI
+```
+
+
+*** 
+
+But when looking at the fit over the whole time period they all seem have at least one site that they don't fit so well, and all miss these sharp declines in winter in the southern sites (grey is again satellite derived NDVI and colored lines are the model outputs). 
+
+</br>   
+Model 1:  
+```{r, message=FALSE, echo=FALSE, warning=FALSE, fig.width=10, fig.height=11}
+setwd("../EBIVRProject/")
+sys.source("./Scripts/Scenario input scripts/VI_projections_SPItest.R", envir = knitr::knit_global())
+
+p2Simple
+
+```
+
+Model 2: 
+```{r, message=FALSE, echo=FALSE, warning=FALSE, fig.width=10, fig.height=11}
+setwd("../EBIVRProject/")
+sys.source("./Scripts/Scenario input scripts/VI_projections_SPItest.R", envir = knitr::knit_global())
+
+p2Org
+```
+
+Model 3: 
+```{r, message=FALSE, echo=FALSE, warning=FALSE, fig.width=10, fig.height=11}
+setwd("../EBIVRProject/")
+sys.source("./Scripts/Scenario input scripts/VI_projections_SPItest.R", envir = knitr::knit_global())
+
+p2SPI
+```
+
+
+***  
+
+And again when filtering the data to look at specific months, it seems like some interesting things are going on in Model 2 with sites getting more similar under the higher climate change emissions scenario in July and increases primarily occurring in northern sites in January, but this isn't as strong in the other models (only shown for ssp585. 
+
+For January:  
+
+</br>  
+Model 1: 
+   
+```{r, message=FALSE, echo=FALSE, warning=FALSE}
+setwd("../EBIVRProject/")
+sys.source("./Scripts/Scenario input scripts/VI_projections_SPItest.R", envir = knitr::knit_global())
+
+p3JanSimple
+```
+
+</br>  
+Model 2: 
+   
+```{r, message=FALSE, echo=FALSE, warning=FALSE}
+setwd("../EBIVRProject/")
+sys.source("./Scripts/Scenario input scripts/VI_projections_SPItest.R", envir = knitr::knit_global())
+
+p3JanOrg
+```
+
+</br>  
+Model 3: 
+   
+```{r, message=FALSE, echo=FALSE, warning=FALSE}
+setwd("../EBIVRProject/")
+sys.source("./Scripts/Scenario input scripts/VI_projections_SPItest.R", envir = knitr::knit_global())
+
+p3JanSPI
+```
+
+
+For July:  
+
+
+</br>  
+Model 1: 
+   
+```{r, message=FALSE, echo=FALSE, warning=FALSE}
+setwd("../EBIVRProject/")
+sys.source("./Scripts/Scenario input scripts/VI_projections_SPItest.R", envir = knitr::knit_global())
+
+p4JulySimple
+```
+
+</br>  
+Model 2: 
+   
+```{r, message=FALSE, echo=FALSE, warning=FALSE}
+setwd("../EBIVRProject/")
+sys.source("./Scripts/Scenario input scripts/VI_projections_SPItest.R", envir = knitr::knit_global())
+
+p4JulyOrg
+```
+
+</br>  
+Model 3: 
+   
+```{r, message=FALSE, echo=FALSE, warning=FALSE}
+setwd("../EBIVRProject/")
+sys.source("./Scripts/Scenario input scripts/VI_projections_SPItest.R", envir = knitr::knit_global())
+
+p4JulySPI
+```
+
+***  
+
+Though when looking at the relationship between SPI and NDVI, it doesn't really seem like there is much of anything there. 
+
+```{r, message=FALSE, echo=FALSE, warning=FALSE}
+setwd("../EBIVRProject/")
+sys.source("./Scripts/Scenario input scripts/VI_projections_SPItest.R", envir = knitr::knit_global())
+
+spiVsNDVIPlot
+```
+
+*** 
+
+
+
+
+
+
+
