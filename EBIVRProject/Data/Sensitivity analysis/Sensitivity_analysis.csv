@@ -1,0 +1,61 @@
+Module,Parameter code,Lower extreme,Lower median,Central value,Upper median,Upper extreme,Parameter code dot
+Base,perc-resource-cells,0.6,0.675,0.75,0.825,0.9,perc.resource.cells
+Base,max-resources-base,112,126,140,154,168,max.resources.base
+Base,r-growth-ts,0.0088,0.0099,0.011,0.0121,0.0132,r.growth.ts
+Base,fragmentation-level,0.664,0.747,0.83,0.913,0.996,fragmentation.level
+Base,n-animals,80,90,100,110,120,n.animals
+Move,speed-mean,0.1328,0.1494,0.166,0.1826,0.1992,speed.mean
+Move,speed-max,0.6576,0.7398,0.822,0.9042,0.9864,speed.max
+Move,HR-r-min,9.04,10.17,11.3,12.43,13.56,HR.r.min
+Move,HR-r-max,26.56,29.88,33.2,36.52,39.84,HR.r.max
+Energy budget,B0,4842.48,5447.79,6053.1,6658.41,7263.72,B0
+Energy budget,gamma,0.512,0.576,0.64,0.704,0.768,gamma
+Energy budget,intercept-pcot,3.76,4.23,4.7,5.17,5.64,intercept.pcot
+Energy budget,slope-pcot,0.504,0.567,0.63,0.693,0.756,slope.pcot
+Energy budget,intercept-icot,8.48,9.54,10.6,11.66,12.72,intercept.icot
+Energy budget,slope-icot,-0.232,-0.261,-0.29,-0.319,-0.348,slope.icot
+Energy budget,n-emb-mid,4.4,4.95,5.5,6.05,6.6,n.emb.mid
+Energy budget,emb-growth-c,0.0896,0.1008,0.112,0.1232,0.1344,emb.growth.c
+Energy budget,emb-mass-init,5.52E-08,6.21E-08,6.90E-08,7.59E-08,8.28E-08,emb.mass.init
+Energy budget,emb-mass-inf,15.9656,17.9613,19.957,21.9527,23.9484,emb.mass.inf
+Energy budget,percent-fat-emb,0.0304,0.0342,0.038,0.0418,0.0456,percent.fat.emb
+Energy budget,percent-pro-emb,0.0816,0.0918,0.102,0.1122,0.1224,percent.pro.emb
+Energy budget,ED-pl,2599.92,2924.91,"3,249.90",3574.89,3899.88,ED.pl
+Energy budget,DE-pl,0.4008,0.4509,0.501,0.5511,0.6012,DE.pl
+Energy budget,preg-prob-const*,18.2984,20.5857,22.873,25.1603,27.4476,preg.prob.const
+Energy budget,preg-prob-mid*,0.0384,0.0432,0.048,0.0528,0.0576,preg.prob.mid
+Energy budget,off-BMR-red,0.4008,0.4509,0.501,0.5511,0.6012,off.BMR.red
+Energy budget,off-growth-eff,0.704,0.792,0.88,0.968,1.056,off.growth.eff
+Energy budget,milk-prod-eff,0.66,0.7425,0.825,0.9075,0.99,milk.prod.eff
+Energy budget,lact-prob-const*,22.6224,25.4502,28.278,31.1058,33.9336,lact.prob.const
+Energy budget,lact-prob-mid*,0.0872,0.0981,0.109,0.1199,0.1308,lact.prob.mid
+Energy budget,ED-pro,18.8,21.15,23.5,25.85,28.2,ED.pro
+Energy budget,DE-fat,0.588,0.6615,0.735,0.8085,0.882,DE.fat
+Energy budget,DE-pro,0.3552,0.3996,0.444,0.4884,0.5328,DE.pro
+Energy budget,growth-lm-prob-const*,23.2408,26.1459,29.051,31.9561,34.8612,growth.lm.prob.const
+Energy budget,growth-lm-prob-mid*,0.0408,0.0459,0.051,0.0561,0.0612,growth.lm.prob.mid
+Energy budget,growth-lm-inf,0.02112,0.02376,0.0264,0.02904,0.03168,growth.lm.inf
+Energy budget,growth-lm-k,0.07712,0.08676,0.0964,0.10604,0.11568,growth.lm.k
+Energy budget,stomach-fill-perc,0.04056,0.04563,0.0507,0.05577,0.06084,stomach.fill.perc
+Energy budget,AE-food,0.6688,0.7524,0.836,0.9196,1.0032,AE.food
+Energy budget,HIF,0.1824,0.2052,0.228,0.2508,0.2736,HIF
+Energy budget,DM-food,0.536,0.603,0.67,0.737,0.804,DM.food
+Energy budget,ED-food,9824.88,11052.99,12281.1,13509.21,14737.32,ED.food
+Energy budget,ED-fat,31.28,35.19,39.1,43.01,46.92,ED.fat
+Energy budget,EC-pro,15.28,17.19,19.1,21.01,22.92,EC.pro
+Energy budget,gamma-mobilize,0.012,0.0135,0.015,0.0165,0.018,gamma.mobilize
+Energy budget,perc-water-adi,0.0952,0.1071,0.119,0.1309,0.1428,perc.water.adi
+Energy budget,max-SL,0.3184,0.3582,0.398,0.4378,0.4776,max.SL
+Life history,t-mating-start,96.8,108.9,121,133.1,145.2,t.mating.start
+Life history,t-mating-end,218.4,245.7,273,300.3,327.6,t.mating.end
+Life history,t-mature,36,40.5,45,49.5,54,t.mature
+Life history,prob-ovul,0.176,0.198,0.22,0.242,0.264,prob.ovul
+Life history,t-0,3.2,3.6,4,4.4,4.8,t.0
+Life history,t-gest,16,18,20,22,24,t.gest
+Life history,t-nurs,16.8,18.9,21,23.1,25.2,t.nurs
+Life history,t-max-age,496,558,620,682,744,t.max.age
+Life history,surv-prob-const*,75.7344,85.2012,94.668,104.1348,113.6016,surv.prob.const
+Life history,surv-prob-mid*,0.0144,0.0162,0.018,0.0198,0.0216,surv.prob.mid
+Life history,surv-mod-emb*,0.4016,0.4518,0.502,0.5522,0.6024,surv.mod.emb
+Life history,surv-mod-off*,0.5064,0.5697,0.633,0.6963,0.7596,surv.mod.off
+Life history,winter-surv-mid,0.3328,0.3744,0.416,0.4576,0.4992,winter.surv.mid

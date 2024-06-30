@@ -1,0 +1,27 @@
+"export-plot data (NetLogo 6.2.0)"
+"EBIVPrototype.nlogo"
+"07/11/2022 11:43:58:560 +0200"
+
+"MODEL SETTINGS"
+"surv-mod-embryo","max-resources-base","lact-prob-mid","resources-dynamic?","surv-prob-mid","surv-mod-off","print?","itv-var-bmr","preg-prob-mid","seasonality?","r-growth-ts","perc-resource-patches","overwinter-skip?","n-animals","out-year","seasonal-var","debug","growth-lm-prob-const","growth-lm-prob-mid","preg-prob-const","lact-prob-const","itv-var-growth","itv-var-repro","surv-prob-const","tester","sl-test"
+"1.2","50","0.3","true","0.1","0.2","false","0","0.2","false","0.02","0.75","true","100","10","0.5","8","16","0.1","13","15","0","0","50","1","0.19"
+
+"""Storage levels at death"""
+"x min","x max","y min","y max","autoplot?","current pen","legend open?","number of pens"
+"0","0.4","0","131","true","""default""","false","1"
+
+"pen name","pen down?","mode","interval","color","x"
+"""default""","true","1","0.01","0","0.09"
+
+"""default"""
+"x","y","color","pen down?"
+"0","100","0","true"
+"0.01","131","0","true"
+"0.02","97","0","true"
+"0.03","85","0","true"
+"0.04","67","0","true"
+"0.05","25","0","true"
+"0.06","18","0","true"
+"0.07","6","0","true"
+"0.08","1","0","true"
+"0.09","1","0","true"

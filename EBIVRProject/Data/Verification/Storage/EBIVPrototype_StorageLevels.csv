@@ -1,0 +1,56 @@
+"export-plot data (NetLogo 6.2.0)"
+"EBIVPrototype.nlogo"
+"07/11/2022 11:43:49:246 +0200"
+
+"MODEL SETTINGS"
+"surv-mod-embryo","max-resources-base","lact-prob-mid","resources-dynamic?","surv-prob-mid","surv-mod-off","print?","itv-var-bmr","preg-prob-mid","seasonality?","r-growth-ts","perc-resource-patches","overwinter-skip?","n-animals","out-year","seasonal-var","debug","growth-lm-prob-const","growth-lm-prob-mid","preg-prob-const","lact-prob-const","itv-var-growth","itv-var-repro","surv-prob-const","tester","sl-test"
+"1.2","50","0.3","true","0.1","0.2","false","0","0.2","false","0.02","0.75","true","100","10","0.5","8","16","0.1","13","15","0","0","50","1","0.19"
+
+"""Storage levels"""
+"x min","x max","y min","y max","autoplot?","current pen","legend open?","number of pens"
+"0","0.4","0","3350","true","""default""","false","2"
+
+"pen name","pen down?","mode","interval","color","x"
+"""default""","true","1","0.01","0","0.37"
+"""offspring""","true","1","1","5","0"
+
+"""default""",,,,"""offspring"""
+"x","y","color","pen down?","x","y","color","pen down?"
+"0","52","0","true",,,,
+"0.01","132","0","true",,,,
+"0.02","240","0","true",,,,
+"0.03","401","0","true",,,,
+"0.04","973","0","true",,,,
+"0.05","1279","0","true",,,,
+"0.06","1261","0","true",,,,
+"0.07","1261","0","true",,,,
+"0.08","1242","0","true",,,,
+"0.09","1401","0","true",,,,
+"0.1","1544","0","true",,,,
+"0.11","1504","0","true",,,,
+"0.12","2167","0","true",,,,
+"0.13","3269","0","true",,,,
+"0.14","3076","0","true",,,,
+"0.15","2391","0","true",,,,
+"0.16","1854","0","true",,,,
+"0.17","1300","0","true",,,,
+"0.18","967","0","true",,,,
+"0.19","738","0","true",,,,
+"0.2","604","0","true",,,,
+"0.21","548","0","true",,,,
+"0.22","474","0","true",,,,
+"0.23","386","0","true",,,,
+"0.24","274","0","true",,,,
+"0.25","248","0","true",,,,
+"0.26","175","0","true",,,,
+"0.27","123","0","true",,,,
+"0.28","66","0","true",,,,
+"0.29","45","0","true",,,,
+"0.3","26","0","true",,,,
+"0.31","2","0","true",,,,
+"0.32","4","0","true",,,,
+"0.33","1","0","true",,,,
+"0.34","4","0","true",,,,
+"0.35000000000000003","2","0","true",,,,
+"0.36","2","0","true",,,,
+"0.37","1","0","true",,,,

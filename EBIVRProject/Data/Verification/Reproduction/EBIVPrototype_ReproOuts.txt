@@ -1,0 +1,2 @@
+"year" "NReproducing""NLittersMean" "NLittersSD" "NConcievedMean" "NConcievedSD" "NBornMean" "NBornSD" "NWeanedMean" "NWeanedSD" "AbortionRateMean" "AbortionRateSD" "OffspringMortalityMean" "OffspringMortalitySD" 
+[10 101 2.594 0.695 3.889 1.268 3.29 1.536 2.443 1.775 0.141 0.295 0.282 0.382]
